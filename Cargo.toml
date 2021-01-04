@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "libranoc",
+    "ranoc",
+    "rano-vm",
+]
