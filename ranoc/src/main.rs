@@ -1,4 +1,4 @@
-use libranoc::parse;
+use libranoc::syntax;
 
 fn main() {
     let src = r#"
@@ -7,7 +7,7 @@ fn main() {
         }
     "#;
 
-    let mut lexer = parse::Tokenizer(src);
+    let mut lexer = syntax::Tokenizer(src);
     while let Some(token) = lexer.next() {
         dbg!(&token);
         dbg!(&lexer.span());
