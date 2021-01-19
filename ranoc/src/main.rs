@@ -2,15 +2,13 @@ use libranoc::syntax;
 
 fn main() {
     let src = r#"
-        fn main {
-            show "Hello, world!";
-        }
+        extern fn println(o: impl Show)
+        fn main
     "#;
 
-    let mut lexer = syntax::Tokenizer(src);
-    while let Some(token) = lexer.next() {
-        dbg!(&token);
-        dbg!(&lexer.span());
-        dbg!(&lexer.extras);
+    let tokens = syntax::tokenize(src);
+    let ast = syntax::parse(&tokens);
+    if let Ok(ast) = ast {
+        dbg!(&ast);
     }
 }

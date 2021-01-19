@@ -1,4 +1,5 @@
-pub mod parse;
+mod parse;
 mod tokenize;
 
-pub use tokenize::{Token, Tokenizer};
+pub use parse::parse;
+pub use tokenize::{create_tokenizer, tokenize, Token};

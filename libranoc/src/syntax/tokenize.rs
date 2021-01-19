@@ -5,7 +5,7 @@ pub struct TokenExtras {
     line: usize,
 }
 
-#[derive(Logos, Debug, PartialEq)]
+#[derive(Logos, Debug, PartialEq, Clone)]
 #[logos(extras = TokenExtras)]
 pub enum Token {
     // #========== Punctuation ==========#
@@ -132,7 +132,7 @@ pub enum Token {
 
     // #========== Identifier ==========#
     #[regex(
-        "[^0-9\n\u{000B}\u{000C}\r\u{0085}\u{2028}\u{2029}\t \u{00AD}\u{00A0}\u{1680}\u{2000}\u{2001}\u{2002}\u{2003}\u{2004}\u{2005}\u{2006}\u{2007}\u{2008}\u{2009}\u{200A}\u{200B}\u{200E}\u{200F}\u{202F}\u{205F}\u{3000}\u{FEFF}][^\n\u{000B}\u{000C}\r\u{0085}\u{2028}\u{2029}\t \u{00AD}\u{00A0}\u{1680}\u{2000}\u{2001}\u{2002}\u{2003}\u{2004}\u{2005}\u{2006}\u{2007}\u{2008}\u{2009}\u{200A}\u{200B}\u{200E}\u{200F}\u{202F}\u{205F}\u{3000}\u{FEFF}]*", 
+        "[^0-9\n\u{000B}\u{000C}\r\u{0085}\u{2028}\u{2029}\t \u{00AD}\u{00A0}\u{1680}\u{2000}\u{2001}\u{2002}\u{2003}\u{2004}\u{2005}\u{2006}\u{2007}\u{2008}\u{2009}\u{200A}\u{200B}\u{200E}\u{200F}\u{202F}\u{205F}\u{3000}\u{FEFF}!#$%&*+,-./:;<=>?@\\^|~(\\[{)\\]}][^\n\u{000B}\u{000C}\r\u{0085}\u{2028}\u{2029}\t \u{00AD}\u{00A0}\u{1680}\u{2000}\u{2001}\u{2002}\u{2003}\u{2004}\u{2005}\u{2006}\u{2007}\u{2008}\u{2009}\u{200A}\u{200B}\u{200E}\u{200F}\u{202F}\u{205F}\u{3000}\u{FEFF}!#$%&*+,-./:;<=>?@\\^|~(\\[{)\\]}]*",
         callback = |lex| lex.slice().to_owned()
     )]
     IdentifierIdentifier(String),
@@ -198,13 +198,18 @@ pub enum Token {
      * '\u{FEFF}' : ZERO WIDTH NO-BREAK SPACE
      */
     #[regex(
-        "[\t \u{00AD}\u{00A0}\u{1680}\u{2000}\u{2001}\u{2002}\u{2003}\u{2004}\u{2005}\u{2006}\u{2007}\u{2008}\u{2009}\u{200A}\u{200B}\u{200E}\u{200F}\u{202F}\u{205F}\u{3000}\u{FEFF}]+"
+        "[\t \u{00AD}\u{00A0}\u{1680}\u{2000}\u{2001}\u{2002}\u{2003}\u{2004}\u{2005}\u{2006}\u{2007}\u{2008}\u{2009}\u{200A}\u{200B}\u{200E}\u{200F}\u{202F}\u{205F}\u{3000}\u{FEFF}]+",
+        logos::skip,
     )]
     HorizontalSpaces,
     #[error]
     Error,
 }
 
-pub fn Tokenizer<'a>(src: &'a str) -> logos::Lexer<'a, Token> {
+pub fn create_tokenizer<'a>(src: &'a str) -> logos::Lexer<'a, Token> {
     Token::lexer(src)
+}
+
+pub fn tokenize(src: &str) -> Vec<Token> {
+    create_tokenizer(src).collect()
 }
