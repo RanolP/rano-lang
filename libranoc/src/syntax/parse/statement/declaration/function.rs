@@ -1,5 +1,5 @@
 use crate::{
-    core::ast::{Declaration, FunctionDeclaration},
+    core::ast::{Declaration, FunctionDeclaration, Type},
     syntax::{parse::*, Token},
 };
 
@@ -26,13 +26,27 @@ pub fn parse_function_declaration(s: ParseInput) -> ParseResult<FunctionDeclarat
         tag(Token::PunctuationRightParenthesis),
     ))(s)?;
 
+    let (s, return_type) = opt(preceded(tag(Token::PunctuationColon), parse_type))(s)?;
+    let return_type = return_type.unwrap_or_else(|| Type::Tuple(Vec::new()));
+
+    let (s, (body, last_expression)) = alt((
+        map(tag(Token::PunctuationSemicolon), |_| (Vec::new(), None)),
+        delimited(
+            tag(Token::PunctuationLeftCurlyBracket),
+            tuple((many0(parse_statement), map(parse_expression, Some))),
+            tag(Token::PunctuationRightCurlyBracket),
+        ),
+    ))(s)?;
+
     Ok((
         s,
         FunctionDeclaration {
             is_extern: extern_token.is_some(),
             name,
             parameters: parameters.unwrap_or_else(|| Vec::new()),
-            body: vec![],
+            return_type,
+            body,
+            last_expression,
         },
     ))
 }

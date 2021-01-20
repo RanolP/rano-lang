@@ -31,10 +31,10 @@ pub struct FunctionDeclaration {
     pub name: String,
     // pub type_parameters: Vec<TypeParameter>,
     pub parameters: Vec<(Pattern, Type)>,
-    // pub return_type: Type,
+    pub return_type: Type,
     // pub where_clauses: Vec<WhereClause>,
     pub body: Vec<Statement>,
-    // pub last_expression: Option<Expression>,
+    pub last_expression: Option<Expression>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -52,10 +52,11 @@ pub enum Expression {
 
 #[derive(Debug, PartialEq)]
 pub enum Literal {
-    String,
-    Integer,
-    Decimal,
-    Bool,
+    String(String),
+    Character(String),
+    Integer(String),
+    Decimal(String),
+    Boolean(String),
 }
 
 #[derive(Debug, PartialEq)]

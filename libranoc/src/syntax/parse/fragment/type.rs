@@ -26,6 +26,5 @@ pub fn parse_type(s: ParseInput) -> ParseResult<Type> {
 }
 
 pub fn parse_type_annotation(s: ParseInput) -> ParseResult<Type> {
-    let (s, _) = tag(Token::PunctuationColon)(s)?;
-    parse_type(s)
+    preceded(tag(Token::PunctuationColon), parse_type)(s)
 }

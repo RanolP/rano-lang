@@ -6,6 +6,7 @@ mod statement;
 
 pub(super) use self::nom::*;
 pub(super) use fragment::*;
+pub(super) use statement::*;
 
 pub use crate::syntax::{parse::nom::ParseResult, Token};
 

@@ -7,10 +7,9 @@ use crate::syntax::{parse::nom::ParseInput, Token};
 
 pub use ::nom::{
     branch::alt,
-    combinator::{all_consuming, opt},
-    multi::many0,
-    multi::{separated_list0, separated_list1},
-    sequence::delimited,
+    combinator::{all_consuming, map, opt},
+    multi::{many0, separated_list0, separated_list1},
+    sequence::{delimited, preceded, terminated, tuple},
 };
 
 #[inline(always)]
@@ -22,10 +21,10 @@ pub fn err_kind<'a, T, Error: ParseError<ParseInput<'a>>>(
 }
 
 #[inline(always)]
-pub fn err_tag_closure<'a, T, Error: ParseError<ParseInput<'a>>>(
+pub fn err_tag<'a, T, Error: ParseError<ParseInput<'a>>>(
     s: ParseInput<'a>,
 ) -> IResult<ParseInput<'a>, T, Error> {
-    err_kind(s, ErrorKind::TagClosure)
+    err_kind(s, ErrorKind::Tag)
 }
 
 pub fn any<'a, Error: ParseError<ParseInput<'a>>>(

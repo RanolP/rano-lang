@@ -5,8 +5,10 @@ use crate::{
 
 mod function;
 
+pub use function::*;
+
 pub fn parse_declaration(s: ParseInput) -> ParseResult<Declaration> {
-    function::parse_function_declaration_declaration(s)
+    parse_function_declaration_declaration(s)
 }
 
 pub fn parse_declaration_statement(s: ParseInput) -> ParseResult<Statement> {

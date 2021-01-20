@@ -141,7 +141,7 @@ pub enum Token {
 
     // #========== Literal ==========#
     #[regex(r#"'(\\'|[^']*[^\\])'"#, |lex| lex.slice().to_owned())]
-    LiteralChar(String),
+    LiteralCharacter(String),
     #[regex(r#"(""|"(\\"|[^"])*[^\\]")"#, |lex| lex.slice().to_owned())]
     LiteralString(String),
     #[regex("([0-9]+|0b[0-1]+|0o[0-7]+|0x[0-9a-fA-F]+)", |lex| lex.slice().to_owned())]

@@ -2,8 +2,10 @@ use libranoc::syntax;
 
 fn main() {
     let src = r#"
-        extern fn println(o: impl Show)
-        fn main
+        extern fn println(o: impl Show);
+        fn main {
+            "Hello, world!"
+        }
     "#;
 
     let tokens = syntax::tokenize(src);
