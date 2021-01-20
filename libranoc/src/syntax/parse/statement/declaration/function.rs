@@ -3,43 +3,43 @@ use crate::{
     syntax::{parse::*, Token},
 };
 
-pub fn parse_function_declaration(s: ParseInput) -> ParseResult<FunctionDeclaration> {
-    let (s, extern_token) = opt(tag(Token::KeywordExtern))(s)?;
-    let (s, _) = tag(Token::KeywordFn)(s)?;
-    let (s, name) = parse_identifier_content(s)?;
+pub fn parse_function_declaration(i: ParseInput) -> ParseResult<FunctionDeclaration> {
+    let (i, extern_token) = opt(tag(Token::KeywordExtern))(i)?;
+    let (i, _) = tag(Token::KeywordFn)(i)?;
+    let (i, name) = parse_identifier_content(i)?;
 
-    let (s, parameters) = opt(delimited(
+    let (i, parameters) = opt(delimited(
         tag(Token::PunctuationLeftParenthesis),
-        |s| {
-            let (s, res) = separated_list0(tag(Token::PunctuationComma), |s| {
-                let (s, pattern) = parse_pattern(s)?;
-                let (s, ty) = parse_type_annotation(s)?;
-                Ok((s, (pattern, ty)))
-            })(s)?;
+        |i| {
+            let (i, res) = separated_list0(tag(Token::PunctuationComma), |i| {
+                let (i, pattern) = parse_pattern(i)?;
+                let (i, ty) = parse_type_annotation(i)?;
+                Ok((i, (pattern, ty)))
+            })(i)?;
             if res.len() > 0 {
-                let (s, _) = opt(tag(Token::PunctuationComma))(s)?;
-                Ok((s, res))
+                let (i, _) = opt(tag(Token::PunctuationComma))(i)?;
+                Ok((i, res))
             } else {
-                Ok((s, res))
+                Ok((i, res))
             }
         },
         tag(Token::PunctuationRightParenthesis),
-    ))(s)?;
+    ))(i)?;
 
-    let (s, return_type) = opt(preceded(tag(Token::PunctuationColon), parse_type))(s)?;
+    let (i, return_type) = opt(preceded(tag(Token::PunctuationColon), parse_type))(i)?;
     let return_type = return_type.unwrap_or_else(|| Type::Tuple(Vec::new()));
 
-    let (s, (body, last_expression)) = alt((
+    let (i, (body, last_expression)) = alt((
         map(tag(Token::PunctuationSemicolon), |_| (Vec::new(), None)),
         delimited(
             tag(Token::PunctuationLeftCurlyBracket),
-            tuple((many0(parse_statement), map(parse_expression, Some))),
+            tuple((many0(parse_statement), opt(parse_expression))),
             tag(Token::PunctuationRightCurlyBracket),
         ),
-    ))(s)?;
+    ))(i)?;
 
     Ok((
-        s,
+        i,
         FunctionDeclaration {
             is_extern: extern_token.is_some(),
             name,
@@ -51,7 +51,7 @@ pub fn parse_function_declaration(s: ParseInput) -> ParseResult<FunctionDeclarat
     ))
 }
 
-pub fn parse_function_declaration_declaration(s: ParseInput) -> ParseResult<Declaration> {
-    let (s, declaration) = parse_function_declaration(s)?;
+pub fn parse_function_declaration_declaration(i: ParseInput) -> ParseResult<Declaration> {
+    let (s, declaration) = parse_function_declaration(i)?;
     Ok((s, Declaration::FunctionDeclaration(declaration)))
 }

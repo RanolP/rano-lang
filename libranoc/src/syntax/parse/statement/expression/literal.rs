@@ -3,59 +3,59 @@ use crate::{
     syntax::{parse::*, Token},
 };
 
-pub fn parse_literal_string(s: ParseInput) -> ParseResult<Literal> {
-    let (s, token) = any(s)?;
+pub fn parse_literal_string(i: ParseInput) -> ParseResult<Literal> {
+    let (i, token) = any(i)?;
     if let Token::LiteralString(v) = token {
-        Ok((s, Literal::String(v.clone())))
+        Ok((i, Literal::String(v.clone())))
     } else {
-        err_tag(s)
+        err_tag(i)
     }
 }
-pub fn parse_literal_character(s: ParseInput) -> ParseResult<Literal> {
-    let (s, token) = any(s)?;
+pub fn parse_literal_character(i: ParseInput) -> ParseResult<Literal> {
+    let (i, token) = any(i)?;
     if let Token::LiteralCharacter(v) = token {
-        Ok((s, Literal::Character(v.clone())))
+        Ok((i, Literal::Character(v.clone())))
     } else {
-        err_tag(s)
+        err_tag(i)
     }
 }
 
-pub fn parse_literal_boolean(s: ParseInput) -> ParseResult<Literal> {
-    let (s, token) = any(s)?;
+pub fn parse_literal_boolean(i: ParseInput) -> ParseResult<Literal> {
+    let (i, token) = any(i)?;
     if let Token::LiteralBoolean(v) = token {
-        Ok((s, Literal::Boolean(v.clone())))
+        Ok((i, Literal::Boolean(v.clone())))
     } else {
-        err_tag(s)
+        err_tag(i)
     }
 }
 
-pub fn parse_literal_integer(s: ParseInput) -> ParseResult<Literal> {
-    let (s, token) = any(s)?;
+pub fn parse_literal_integer(i: ParseInput) -> ParseResult<Literal> {
+    let (i, token) = any(i)?;
     if let Token::LiteralNumberIntegral(v) = token {
-        Ok((s, Literal::Integer(v.clone())))
+        Ok((i, Literal::Integer(v.clone())))
     } else {
-        err_tag(s)
+        err_tag(i)
     }
 }
-pub fn parse_literal_decimal(s: ParseInput) -> ParseResult<Literal> {
-    let (s, token) = any(s)?;
+pub fn parse_literal_decimal(i: ParseInput) -> ParseResult<Literal> {
+    let (i, token) = any(i)?;
     if let Token::LiteralNumberDecimal(v) = token {
-        Ok((s, Literal::Decimal(v.clone())))
+        Ok((i, Literal::Decimal(v.clone())))
     } else {
-        err_tag(s)
+        err_tag(i)
     }
 }
 
-pub fn parse_literal(s: ParseInput) -> ParseResult<Literal> {
+pub fn parse_literal(i: ParseInput) -> ParseResult<Literal> {
     alt((
         parse_literal_string,
         parse_literal_character,
         parse_literal_boolean,
         parse_literal_integer,
         parse_literal_decimal,
-    ))(s)
+    ))(i)
 }
 
-pub fn parse_literal_expression(s: ParseInput) -> ParseResult<Expression> {
-    map(parse_literal, Expression::Literal)(s)
+pub fn parse_literal_expression(i: ParseInput) -> ParseResult<Expression> {
+    map(parse_literal, Expression::Literal)(i)
 }

@@ -1,21 +1,43 @@
 use std::{
     iter::{once, Cloned, Enumerate},
+    ops::RangeFrom,
     slice::Iter,
 };
 
-use nom::{Compare, CompareResult, InputIter, InputLength, InputTake, Needed, UnspecializedInput};
+use nom::{
+    Compare, CompareResult, InputIter, InputLength, InputTake, Needed, Slice, UnspecializedInput,
+};
 
 use crate::syntax::Token;
 
-#[derive(Clone, PartialEq)]
-pub struct ParseInput<'a>(pub(crate) &'a [Token]);
+#[derive(Debug, Clone, PartialEq)]
+pub struct ParseInput<'a> {
+    pub(crate) tokens: &'a [Token],
+    pub(crate) binding_power: u8,
+}
+
+impl<'a> ParseInput<'a> {
+    pub(crate) fn new(tokens: &'a [Token]) -> Self {
+        ParseInput {
+            tokens,
+            binding_power: 0,
+        }
+    }
+
+    pub(crate) fn with_binding_power(&self, binding_power: u8) -> Self {
+        ParseInput {
+            tokens: &self.tokens,
+            binding_power,
+        }
+    }
+}
 
 impl<'a> UnspecializedInput for ParseInput<'a> {}
 
 impl<'a> InputLength for ParseInput<'a> {
     #[inline]
     fn input_len(&self) -> usize {
-        self.0.len()
+        self.tokens.len()
     }
 }
 
@@ -30,21 +52,21 @@ impl<'a> InputIter for ParseInput<'a> {
     }
     #[inline]
     fn iter_elements(&self) -> Self::IterElem {
-        self.0.iter().cloned()
+        self.tokens.iter().cloned()
     }
     #[inline]
     fn position<P>(&self, predicate: P) -> Option<usize>
     where
         P: Fn(Self::Item) -> bool,
     {
-        self.0.iter().position(|b| predicate(b.clone()))
+        self.tokens.iter().position(|b| predicate(b.clone()))
     }
     #[inline]
     fn slice_index(&self, count: usize) -> Result<usize, Needed> {
-        if self.0.len() >= count {
+        if self.tokens.len() >= count {
             Ok(count)
         } else {
-            Err(Needed::new(count - self.0.len()))
+            Err(Needed::new(count - self.tokens.len()))
         }
     }
 }
@@ -52,12 +74,24 @@ impl<'a> InputIter for ParseInput<'a> {
 impl<'a> InputTake for ParseInput<'a> {
     #[inline]
     fn take(&self, count: usize) -> Self {
-        ParseInput(&self.0[0..count])
+        ParseInput {
+            tokens: &self.tokens[0..count],
+            binding_power: self.binding_power,
+        }
     }
     #[inline]
     fn take_split(&self, count: usize) -> (Self, Self) {
-        let (prefix, suffix) = self.0.split_at(count);
-        (ParseInput(suffix), ParseInput(prefix))
+        let (prefix, suffix) = self.tokens.split_at(count);
+        (
+            ParseInput {
+                tokens: suffix,
+                binding_power: self.binding_power,
+            },
+            ParseInput {
+                tokens: prefix,
+                binding_power: self.binding_power,
+            },
+        )
     }
 }
 
@@ -86,6 +120,15 @@ impl<'a> Compare<Token> for ParseInput<'a> {
             CompareResult::Incomplete
         } else {
             CompareResult::Ok
+        }
+    }
+}
+
+impl<'a> Slice<RangeFrom<usize>> for ParseInput<'a> {
+    fn slice(&self, range: RangeFrom<usize>) -> Self {
+        ParseInput {
+            tokens: &self.tokens[range],
+            binding_power: self.binding_power,
         }
     }
 }

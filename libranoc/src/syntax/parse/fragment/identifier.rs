@@ -1,9 +1,10 @@
 use crate::syntax::{parse::*, Token};
 
-pub fn parse_identifier_content(s: ParseInput) -> ParseResult<String> {
-    let (s, token) = any(s)?;
-    match token {
-        Token::IdentifierIdentifier(content) => Ok((s, content.clone())),
-        _ => err_tag(s),
+pub fn parse_identifier_content(i: ParseInput) -> ParseResult<String> {
+    let (i, token) = any(i)?;
+    if let Token::IdentifierIdentifier(content) = token {
+        Ok((i, content.clone()))
+    } else {
+        err_tag(i)
     }
 }

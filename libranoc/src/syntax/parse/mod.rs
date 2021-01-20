@@ -10,8 +10,8 @@ pub(super) use statement::*;
 
 pub use crate::syntax::{parse::nom::ParseResult, Token};
 
-pub fn parse(s: &[Token]) -> ParseResultStd<Vec<Node>> {
-    let s = ParseInput(s);
-    let (_, nodes) = all_consuming(many0(statement::parse_statement_node))(s)?;
+pub fn parse(tokens: &[Token]) -> ParseResultStd<Vec<Node>> {
+    let i = ParseInput::new(tokens);
+    let (_, nodes) = all_consuming(many0(statement::parse_statement_node))(i)?;
     Ok(nodes)
 }

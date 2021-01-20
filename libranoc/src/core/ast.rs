@@ -37,20 +37,20 @@ pub struct FunctionDeclaration {
     pub last_expression: Option<Expression>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
     Match,
     Closure,
     Literal(Literal),
     Path,
     Array,
-    Tuple,
+    Tuple(Vec<Expression>),
     Init,
     Name,
-    Operator,
+    Operator(Operator),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Literal {
     String(String),
     Character(String),
@@ -59,6 +59,48 @@ pub enum Literal {
     Boolean(String),
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub enum Operator {
+    Prefix(PrefixOperatorKind, Box<Expression>),
+    Infix(Box<Expression>, InfixOperatorKind, Box<Expression>),
+    Postfix(
+        Box<Expression>,
+        PostfixOperatorKind,
+        Option<Box<Expression>>,
+    ),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum PrefixOperatorKind {
+    Not,
+    UnaryPlus,
+    UnaryMinus,
+}
+#[derive(Debug, PartialEq, Clone)]
+pub enum InfixOperatorKind {
+    LogicalOr,
+    LogicalAnd,
+    EqualTo,
+    NotEqualTo,
+    GreaterThan,
+    LessThan,
+    GreaterThanOrEqualTo,
+    LessThanOrEqualTo,
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Remainder,
+    GetField,
+    GetFieldNullable,
+    RangeRightExclusive,
+    RangeRightInclusive,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum PostfixOperatorKind {
+    Index,
+}
 #[derive(Debug, PartialEq)]
 pub struct Path(pub Vec<String>);
 

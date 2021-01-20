@@ -84,6 +84,8 @@ pub enum Token {
     PunctuationsRangeRightExclusive,
     #[token("..=")]
     PunctuationsRangeRightInclusive,
+    #[token("?.")]
+    PunctuationsGetFieldNullable,
     // #========== Keyword ==========#
     #[token("as")]
     KeywordAs,
