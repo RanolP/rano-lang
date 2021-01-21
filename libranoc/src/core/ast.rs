@@ -1,4 +1,9 @@
 #[derive(Debug, PartialEq)]
+pub struct Module {
+    pub(crate) nodes: Vec<Node>,
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Node {
     Directive,
     Statement(Statement),
@@ -46,7 +51,6 @@ pub enum Expression {
     Array,
     Tuple(Vec<Expression>),
     Init,
-    Name,
     Operator(Operator),
 }
 
