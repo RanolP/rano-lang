@@ -5,7 +5,9 @@ pub fn parse_name_ident(i: ParseInput) -> ParseResult<Name> {
 }
 
 pub fn parse_name_placeholder(i: ParseInput) -> ParseResult<Name> {
-    map(tag(Token::KeywordPlaceholderName), |_| Name::Placeholder)(i)
+    map(tag(TokenKind::KeywordPlaceholderName), |_| {
+        Name::Placeholder
+    })(i)
 }
 
 pub fn parse_name(i: ParseInput) -> ParseResult<Name> {

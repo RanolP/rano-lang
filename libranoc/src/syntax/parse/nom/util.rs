@@ -1,13 +1,13 @@
 use nom::{
     error::{ErrorKind, ParseError},
-    Compare, CompareResult, Err, IResult, InputIter, InputTake, Slice,
+    Err, IResult, InputIter, InputTake, Slice,
 };
 
-use crate::syntax::{parse::nom::ParseInput, Token};
+use crate::syntax::{parse::nom::ParseInput, Token, TokenKind};
 
 pub use ::nom::{
     branch::alt,
-    combinator::{all_consuming, map, opt},
+    combinator::{all_consuming, cut, map, opt},
     multi::{fold_many0, many0, separated_list0, separated_list1},
     sequence::{delimited, preceded, terminated, tuple},
 };
@@ -55,13 +55,13 @@ pub fn any<'a, Error: ParseError<ParseInput<'a>>>(
 }
 
 pub fn tag<'a, Error: ParseError<ParseInput<'a>>>(
-    tag: Token,
-) -> impl Fn(ParseInput<'a>) -> IResult<ParseInput<'a>, &'a Token, Error> {
-    move |i: ParseInput| match i.compare(tag.clone()) {
-        CompareResult::Ok => {
-            let (s, part) = i.take_split(1);
-            Ok((s, &part.tokens[0]))
-        }
+    tag: TokenKind,
+) -> impl Fn(ParseInput<'a>) -> IResult<ParseInput<'a>, Token, Error> {
+    move |i| match (i).iter_elements().next().map(|t| {
+        let b = t.kind == tag;
+        (t, b)
+    }) {
+        Some((t, true)) => Ok((i.slice(1..), t)),
         _ => err_kind(i, ErrorKind::Tag),
     }
 }

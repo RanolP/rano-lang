@@ -16,9 +16,10 @@ pub fn parse_type_basic(i: ParseInput) -> ParseResult<Type> {
 }
 
 pub fn parse_type_impl(i: ParseInput) -> ParseResult<Type> {
-    map(preceded(tag(Token::KeywordImpl), parse_type_basic), |ty| {
-        Type::Impl(Box::new(ty))
-    })(i)
+    map(
+        preceded(tag(TokenKind::KeywordImpl), cut(parse_type_basic)),
+        |ty| Type::Impl(Box::new(ty)),
+    )(i)
 }
 
 pub fn parse_type(i: ParseInput) -> ParseResult<Type> {
@@ -26,5 +27,5 @@ pub fn parse_type(i: ParseInput) -> ParseResult<Type> {
 }
 
 pub fn parse_type_annotation(i: ParseInput) -> ParseResult<Type> {
-    preceded(tag(Token::PunctuationColon), parse_type)(i)
+    preceded(tag(TokenKind::PunctuationColon), cut(parse_type))(i)
 }

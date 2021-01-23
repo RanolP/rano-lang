@@ -1,19 +1,20 @@
 use crate::{
     core::ast::{Expression, Literal},
-    syntax::{parse::*, Token},
+    syntax::parse::*,
 };
 
 pub fn parse_literal_string(i: ParseInput) -> ParseResult<Literal> {
     let (i, token) = any(i)?;
-    if let Token::LiteralString(v) = token {
+    if let TokenKind::LiteralString(v) = &token.kind {
         Ok((i, Literal::String(v.clone())))
     } else {
         err_tag(i)
     }
 }
+
 pub fn parse_literal_character(i: ParseInput) -> ParseResult<Literal> {
     let (i, token) = any(i)?;
-    if let Token::LiteralCharacter(v) = token {
+    if let TokenKind::LiteralCharacter(v) = &token.kind {
         Ok((i, Literal::Character(v.clone())))
     } else {
         err_tag(i)
@@ -22,7 +23,7 @@ pub fn parse_literal_character(i: ParseInput) -> ParseResult<Literal> {
 
 pub fn parse_literal_boolean(i: ParseInput) -> ParseResult<Literal> {
     let (i, token) = any(i)?;
-    if let Token::LiteralBoolean(v) = token {
+    if let TokenKind::LiteralBoolean(v) = &token.kind {
         Ok((i, Literal::Boolean(v.clone())))
     } else {
         err_tag(i)
@@ -31,7 +32,7 @@ pub fn parse_literal_boolean(i: ParseInput) -> ParseResult<Literal> {
 
 pub fn parse_literal_integer(i: ParseInput) -> ParseResult<Literal> {
     let (i, token) = any(i)?;
-    if let Token::LiteralNumberIntegral(v) = token {
+    if let TokenKind::LiteralNumberIntegral(v) = &token.kind {
         Ok((i, Literal::Integer(v.clone())))
     } else {
         err_tag(i)
@@ -39,7 +40,7 @@ pub fn parse_literal_integer(i: ParseInput) -> ParseResult<Literal> {
 }
 pub fn parse_literal_decimal(i: ParseInput) -> ParseResult<Literal> {
     let (i, token) = any(i)?;
-    if let Token::LiteralNumberDecimal(v) = token {
+    if let TokenKind::LiteralNumberDecimal(v) = &token.kind {
         Ok((i, Literal::Decimal(v.clone())))
     } else {
         err_tag(i)

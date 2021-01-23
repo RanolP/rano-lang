@@ -1,13 +1,32 @@
-use logos::Logos;
+use std::ops::Range;
+
+use logos::Lexer;
+pub use logos::Logos;
 
 #[derive(Debug, Default)]
 pub struct TokenExtras {
+    last_linefeed: usize,
     line: usize,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Span {
+    pub range: Range<usize>,
+    pub line: usize,
+    pub column: usize,
+    pub len: usize,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Token<'a> {
+    pub kind: TokenKind,
+    pub span: Span,
+    pub slice: &'a str,
 }
 
 #[derive(Logos, Debug, PartialEq, Clone)]
 #[logos(extras = TokenExtras)]
-pub enum Token {
+pub enum TokenKind {
     // #========== Punctuation ==========#
     #[token("!")]
     PunctuationExclamationMark,
@@ -111,6 +130,8 @@ pub enum Token {
     KeywordLet,
     #[token("match")]
     KeywordMatch,
+    #[token("pub")]
+    KeywordPub,
     #[token("return")]
     KeywordReturn,
     #[token("self")]
@@ -169,6 +190,7 @@ pub enum Token {
         priority = 2,
         callback = |lex| {
             lex.extras.line += 1;
+            lex.extras.last_linefeed = lex.span().end;
 
             logos::Skip
         }
@@ -208,8 +230,31 @@ pub enum Token {
     Error,
 }
 
-pub fn create_tokenizer<'a>(src: &'a str) -> logos::Lexer<'a, Token> {
-    Token::lexer(src)
+struct RanoLexer<'a> {
+    logos_lexer: Lexer<'a, TokenKind>,
+}
+
+impl<'a> Iterator for RanoLexer<'a> {
+    type Item = Token<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.logos_lexer.next().map(|kind| Token {
+            kind,
+            span: Span {
+                range: self.logos_lexer.span(),
+                line: self.logos_lexer.extras.line,
+                column: self.logos_lexer.span().end - self.logos_lexer.extras.last_linefeed,
+                len: self.logos_lexer.span().len(),
+            },
+            slice: self.logos_lexer.slice(),
+        })
+    }
+}
+
+pub fn create_tokenizer<'a>(src: &'a str) -> impl Iterator<Item = Token> + 'a {
+    RanoLexer {
+        logos_lexer: TokenKind::lexer(src),
+    }
 }
 
 pub fn tokenize(src: &str) -> Vec<Token> {

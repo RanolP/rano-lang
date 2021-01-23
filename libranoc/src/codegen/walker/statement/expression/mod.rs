@@ -24,5 +24,8 @@ pub fn walk_expression(context: &mut Context, expression: Expression) {
         Expression::Operator(_) => {
             todo!("operator is not implemented now")
         }
+        Expression::Name(_) => {
+            todo!("name is not implemented now")
+        }
     }
 }

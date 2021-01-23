@@ -1,0 +1,5 @@
+extern fn show(value: i32);
+
+pub fn main {
+    console.show 42;
+}

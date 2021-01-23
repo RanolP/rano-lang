@@ -11,5 +11,5 @@ pub fn compile_wasm(module: Module) -> Vec<u8> {
 
     walk_module(&mut context, module);
 
-    context.module.finish()
+    context.finish()
 }

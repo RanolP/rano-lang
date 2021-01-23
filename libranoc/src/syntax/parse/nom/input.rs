@@ -1,18 +1,16 @@
 use std::{
-    iter::{once, Cloned, Enumerate},
+    iter::{Cloned, Enumerate},
     ops::RangeFrom,
     slice::Iter,
 };
 
-use nom::{
-    Compare, CompareResult, InputIter, InputLength, InputTake, Needed, Slice, UnspecializedInput,
-};
+use nom::{InputIter, InputLength, InputTake, Needed, Slice};
 
 use crate::syntax::Token;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParseInput<'a> {
-    pub(crate) tokens: &'a [Token],
+    pub(crate) tokens: &'a [Token<'a>],
     pub(crate) binding_power: u8,
 }
 
@@ -32,8 +30,6 @@ impl<'a> ParseInput<'a> {
     }
 }
 
-impl<'a> UnspecializedInput for ParseInput<'a> {}
-
 impl<'a> InputLength for ParseInput<'a> {
     #[inline]
     fn input_len(&self) -> usize {
@@ -42,9 +38,9 @@ impl<'a> InputLength for ParseInput<'a> {
 }
 
 impl<'a> InputIter for ParseInput<'a> {
-    type Item = Token;
+    type Item = Token<'a>;
     type Iter = Enumerate<Self::IterElem>;
-    type IterElem = Cloned<Iter<'a, Token>>;
+    type IterElem = Cloned<Iter<'a, Token<'a>>>;
 
     #[inline]
     fn iter_indices(&self) -> Self::Iter {
@@ -92,35 +88,6 @@ impl<'a> InputTake for ParseInput<'a> {
                 binding_power: self.binding_power,
             },
         )
-    }
-}
-
-impl<'a> Compare<Token> for ParseInput<'a> {
-    #[inline(always)]
-    fn compare(&self, t: Token) -> CompareResult {
-        let pos = self.iter_elements().zip(once(t)).position(|(a, b)| a != b);
-
-        match pos {
-            Some(_) => CompareResult::Error,
-            None => {
-                if self.input_len() >= 1 {
-                    CompareResult::Ok
-                } else {
-                    CompareResult::Incomplete
-                }
-            }
-        }
-    }
-
-    #[inline(always)]
-    fn compare_no_case(&self, t: Token) -> CompareResult {
-        if self.iter_elements().zip(once(t)).any(|(a, b)| a != b) {
-            CompareResult::Error
-        } else if self.input_len() < 1 {
-            CompareResult::Incomplete
-        } else {
-            CompareResult::Ok
-        }
     }
 }
 

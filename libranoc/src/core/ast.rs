@@ -32,6 +32,7 @@ pub enum Declaration {
 
 #[derive(Debug, PartialEq)]
 pub struct FunctionDeclaration {
+    pub is_pub: bool,
     pub is_extern: bool,
     pub name: String,
     // pub type_parameters: Vec<TypeParameter>,
@@ -52,6 +53,7 @@ pub enum Expression {
     Tuple(Vec<Expression>),
     Init,
     Operator(Operator),
+    Name(Name),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -67,11 +69,7 @@ pub enum Literal {
 pub enum Operator {
     Prefix(PrefixOperatorKind, Box<Expression>),
     Infix(Box<Expression>, InfixOperatorKind, Box<Expression>),
-    Postfix(
-        Box<Expression>,
-        PostfixOperatorKind,
-        Option<Box<Expression>>,
-    ),
+    Postfix(Box<Expression>, PostfixOperatorKind, Vec<Expression>),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -104,6 +102,7 @@ pub enum InfixOperatorKind {
 #[derive(Debug, PartialEq, Clone)]
 pub enum PostfixOperatorKind {
     Index,
+    FunctionCall,
 }
 #[derive(Debug, PartialEq)]
 pub struct Path(pub Vec<String>);
@@ -135,7 +134,7 @@ pub enum Pattern {
     Slot(Name),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Name {
     Ident(String),
     Placeholder,
