@@ -1,12 +1,14 @@
+use crate::syntax::Token;
+
 #[derive(Debug, PartialEq)]
-pub struct Module {
-    pub(crate) nodes: Vec<Node>,
+pub struct Module<'a> {
+    pub(crate) nodes: Vec<Node<'a>>,
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Node {
+pub enum Node<'a> {
     Directive,
-    Statement(Statement),
+    Statement(Statement<'a>),
 }
 
 // TODO: directives like #![deny(unused_variable)]
@@ -14,14 +16,14 @@ pub enum Node {
 pub struct Directive {}
 
 #[derive(Debug, PartialEq)]
-pub enum Statement {
-    Declaration(Declaration),
-    Expression(Expression),
+pub enum Statement<'a> {
+    Declaration(Declaration<'a>),
+    Expression(Expression<'a>),
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Declaration {
-    FunctionDeclaration(FunctionDeclaration),
+pub enum Declaration<'a> {
+    FunctionDeclaration(FunctionDeclaration<'a>),
     VariableDeclaration,
     StructDeclaration,
     UnionDeclaration,
@@ -31,29 +33,29 @@ pub enum Declaration {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct FunctionDeclaration {
+pub struct FunctionDeclaration<'a> {
     pub is_pub: bool,
     pub is_extern: bool,
-    pub name: String,
+    pub name: Identifier<'a>,
     // pub type_parameters: Vec<TypeParameter>,
-    pub parameters: Vec<(Pattern, Type)>,
-    pub return_type: Type,
+    pub parameters: Vec<(Pattern<'a>, Type<'a>)>,
+    pub return_type: Type<'a>,
     // pub where_clauses: Vec<WhereClause>,
-    pub body: Vec<Statement>,
-    pub last_expression: Option<Expression>,
+    pub body: Vec<Statement<'a>>,
+    pub last_expression: Option<Expression<'a>>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Expression {
+pub enum Expression<'a> {
     Match,
     Closure,
     Literal(Literal),
     Path,
     Array,
-    Tuple(Vec<Expression>),
+    Tuple(Vec<Expression<'a>>),
     Init,
-    Operator(Operator),
-    Name(Name),
+    Operator(Operator<'a>),
+    Name(Name<'a>),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -66,10 +68,14 @@ pub enum Literal {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Operator {
-    Prefix(PrefixOperatorKind, Box<Expression>),
-    Infix(Box<Expression>, InfixOperatorKind, Box<Expression>),
-    Postfix(Box<Expression>, PostfixOperatorKind, Vec<Expression>),
+pub enum Operator<'a> {
+    Prefix(PrefixOperatorKind, Box<Expression<'a>>),
+    Infix(Box<Expression<'a>>, InfixOperatorKind, Box<Expression<'a>>),
+    Postfix(
+        Box<Expression<'a>>,
+        PostfixOperatorKind,
+        Vec<Expression<'a>>,
+    ),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -105,37 +111,40 @@ pub enum PostfixOperatorKind {
     FunctionCall,
 }
 #[derive(Debug, PartialEq)]
-pub struct Path(pub Vec<String>);
+pub struct Path<'a>(pub Vec<Identifier<'a>>);
 
 #[derive(Debug, PartialEq)]
-pub enum TypeParameter {
+pub enum TypeParameter<'a> {
     Star,
-    Specific(Type),
+    Specific(Type<'a>),
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Type {
+pub enum Type<'a> {
     Basic {
-        base: Path,
-        type_parameters: Vec<TypeParameter>,
+        base: Path<'a>,
+        type_parameters: Vec<TypeParameter<'a>>,
     },
-    Tuple(Vec<Type>),
-    Impl(Box<Type>),
-    Nullable(Box<Type>),
+    Tuple(Vec<Type<'a>>),
+    Impl(Box<Type<'a>>),
+    Nullable(Box<Type<'a>>),
     Function {
         // generic and where clause?
-        parameters_type: Vec<Type>,
-        return_type: Box<Type>,
+        parameters_type: Vec<Type<'a>>,
+        return_type: Box<Type<'a>>,
     },
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Pattern {
-    Slot(Name),
+pub enum Pattern<'a> {
+    Slot(Name<'a>),
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Name {
-    Ident(String),
+pub enum Name<'a> {
+    Ident(Identifier<'a>),
     Placeholder,
 }
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Identifier<'a>(pub Token<'a>, pub String);

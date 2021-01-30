@@ -7,7 +7,7 @@ pub fn parse_function_declaration(i: ParseInput) -> ParseResult<FunctionDeclarat
     let (i, pub_token) = opt(tag(TokenKind::KeywordPub))(i)?;
     let (i, extern_token) = opt(tag(TokenKind::KeywordExtern))(i)?;
     let (i, _) = tag(TokenKind::KeywordFn)(i)?;
-    let (i, name) = cut(parse_identifier_content)(i)?;
+    let (i, name) = cut(parse_identifier)(i)?;
 
     let (i, parameters) = opt(delimited(
         tag(TokenKind::PunctuationLeftParenthesis),

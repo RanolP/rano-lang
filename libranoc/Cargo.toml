@@ -4,12 +4,10 @@ version = "0.1.0"
 authors = ["RanolP <public.ranolp@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 # for the syntax parsing
 logos = "0.11.4"
-nom = "6.0.1"
+nom = "6.1.0"
 # for wasm code generation
 wasm-encoder = "0.4.0"
 # for error handling

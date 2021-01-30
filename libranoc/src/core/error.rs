@@ -1,11 +1,13 @@
 use thiserror::Error;
 
-use crate::syntax::Span;
+use crate::syntax::{Span, Token};
 
 #[derive(Debug)]
 #[repr(u16)]
 pub enum ErrorCode {
     SyntaxError = 0001,
+    Redefined = 0002,
+    UndefinedSymbol = 0003,
 }
 
 #[derive(Debug)]
@@ -26,6 +28,35 @@ pub struct Error {
     pub code: ErrorCode,
     pub message: String,
     pub labels: Vec<Label>,
+}
+
+impl Error {
+    pub fn redefined(name: String, before: Span, current: Span) -> Error {
+        Error {
+            code: ErrorCode::Redefined,
+            message: format!("`{}` has been redefined.", name),
+            labels: vec![
+                Label {
+                    location: Location::Known(before),
+                    message: Some(format!("`{}` has been defined here...", name)),
+                },
+                Label {
+                    location: Location::Known(current),
+                    message: Some("But you have defined here too...".to_owned()),
+                },
+            ],
+        }
+    }
+    pub fn undefined_symbol(name: Token) -> Error {
+        Error {
+            code: ErrorCode::UndefinedSymbol,
+            message: format!("Undefined symbol `{}`.", name.slice),
+            labels: vec![Label {
+                location: Location::Known(name.span.clone()),
+                message: None,
+            }],
+        }
+    }
 }
 
 impl<'a> From<::nom::Err<crate::syntax::Error<'a>>> for Error {

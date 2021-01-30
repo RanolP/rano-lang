@@ -4,3 +4,11 @@ members = [
     "ranoc",
     "rano-vm",
 ]
+
+[profile.release]
+opt-level = "s"
+panic = "abort"
+
+# LTO(Link-Time Optimization) Options
+lto = true
+codegen-units = 1

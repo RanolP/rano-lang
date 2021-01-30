@@ -1,7 +1,7 @@
 use crate::{core::ast::Name, syntax::parse::*};
 
 pub fn parse_name_ident(i: ParseInput) -> ParseResult<Name> {
-    map(parse_identifier_content, Name::Ident)(i)
+    map(parse_identifier, Name::Ident)(i)
 }
 
 pub fn parse_name_placeholder(i: ParseInput) -> ParseResult<Name> {

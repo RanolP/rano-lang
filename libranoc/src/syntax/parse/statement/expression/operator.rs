@@ -3,9 +3,9 @@ use crate::{
     syntax::{parse::*, TokenKind},
 };
 
-pub enum AfterLhsOperator {
-    Infix(InfixOperatorKind, Box<Expression>),
-    Postfix(PostfixOperatorKind, Vec<Expression>),
+pub enum AfterLhsOperator<'a> {
+    Infix(InfixOperatorKind, Box<Expression<'a>>),
+    Postfix(PostfixOperatorKind, Vec<Expression<'a>>),
 }
 
 pub struct OperatorBindingPowerInfix {

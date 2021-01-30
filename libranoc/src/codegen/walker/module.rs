@@ -10,7 +10,9 @@ pub fn walk_module(context: &mut Context, module: Module) {
                 todo!("directive is not implemented now")
             }
             Node::Statement(statement) => {
-                walk_statement(context, statement);
+                if let Err(error) = walk_statement(context, statement) {
+                    context.add_compilation_error(error);
+                }
             }
         }
     }

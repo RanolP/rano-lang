@@ -1,5 +1,6 @@
-extern fn show(value: i32);
+extern fn show(value: i32): i32;
+extern fn add(lhs: i32, rhs: i32): i32;
 
 pub fn main {
-    console.show 42;
+    show (40 + 2);
 }
