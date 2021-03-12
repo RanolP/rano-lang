@@ -15,6 +15,12 @@ mod external {
     }
 }
 
+mod ops {
+    pub fn add_i32_i32(lhs: i32, rhs: i32) -> i32 {
+        lhs + rhs
+    }
+}
+
 fn report_error(src: &String, error: Error) -> anyhow::Result<()> {
     use codespan_reporting::{
         diagnostic::{Diagnostic, Label},
@@ -86,8 +92,9 @@ fn main() -> anyhow::Result<()> {
     let import_object = imports! {
         "extern" => {
             "show" => Function::new_native(&store, external::show),
-            "add" => Function::new_native(&store, external::add)
-        }
+            "add" => Function::new_native(&store, external::add),
+            "Add__i32_i32" => Function::new_native(&store, ops::add_i32_i32),
+        },
     };
     let instance = Instance::new(&module, &import_object)?;
 

@@ -1,6 +1,7 @@
 extern fn show(value: i32): i32;
-extern fn add(lhs: i32, rhs: i32): i32;
+extern fn Add__i32_i32(lhs: i32, rhs: i32): i32;
 
 pub fn main {
-    show (40 + 2);
+    show (40 + 123);
+    7
 }

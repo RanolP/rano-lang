@@ -1,6 +1,6 @@
 use wasm_encoder::{EntityType, Instruction};
 
-use crate::{codegen::*, core::ast::*, syntax::tokenize};
+use crate::{codegen::*, core::ast::*, syntax::Span};
 
 impl<'a> Walker<FunctionDeclaration> for Context<'a> {
     fn walk(&mut self, function_declaration: FunctionDeclaration) -> Result<(), Error> {
@@ -18,19 +18,6 @@ impl<'a> Walker<FunctionDeclaration> for Context<'a> {
                 EntityType::Function(id),
             )?;
         } else {
-            // TODO: instruction
-            let add_id = self.import("extern", &tokenize("add")[0])?;
-            let show_id = self.import("extern", &tokenize("show")[0])?;
-            //  let id = context.create_data(b"Hello, world!".iter().copied());
-            let body = vec![
-                Instruction::I32Const(40),
-                Instruction::I32Const(2),
-                Instruction::Call(add_id),
-                Instruction::Call(show_id),
-                Instruction::Drop,
-                Instruction::I32Const(0),
-                Instruction::End,
-            ];
             let mut body = Vec::new();
             std::mem::swap(&mut self.instructions, &mut body);
             for statement in function_declaration.body {
@@ -38,11 +25,10 @@ impl<'a> Walker<FunctionDeclaration> for Context<'a> {
             }
             if let Some(last_expression) = function_declaration.last_expression {
                 self.walk(last_expression)?;
+                self.instructions.push(Instruction::End);
             }
             std::mem::swap(&mut self.instructions, &mut body);
-            dbg!(&body);
-            if let Some(Instruction::End) = body.last() {
-            } else {
+            if !matches!(body.last(), Some(Instruction::End)) {
                 if matches!(&function_declaration.return_type, Type::Tuple(v) if v.is_empty()) {
                     body.push(Instruction::I32Const(0));
                     body.push(Instruction::End);

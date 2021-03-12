@@ -1,5 +1,5 @@
 use crate::{
-    core::ast::{Expression, Literal},
+    core::ast::*,
     syntax::parse::*,
 };
 
@@ -33,7 +33,7 @@ pub fn parse_literal_boolean(i: ParseInput) -> ParseResult<Literal> {
 pub fn parse_literal_integer(i: ParseInput) -> ParseResult<Literal> {
     let (i, token) = any(i)?;
     if let TokenKind::LiteralNumberIntegral(v) = &token.kind {
-        Ok((i, Literal::Integer(v.clone())))
+        Ok((i, Literal::Integer(Integer(v.clone()))))
     } else {
         err_tag(i)
     }

@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::syntax::Token;
+use crate::syntax::{Span, Spanned, Token};
 
 #[derive(Debug, PartialEq)]
 pub struct Module {
@@ -60,14 +60,25 @@ pub enum Expression {
     Name(Name),
 }
 
+impl Spanned for Expression {
+    fn span(&self) -> crate::syntax::Span {
+        match self {
+            _ => todo!("SPAN PLEASE"),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Literal {
     String(String),
     Character(String),
-    Integer(String),
+    Integer(Integer),
     Decimal(String),
     Boolean(String),
 }
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Integer(pub String);
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Operator {
@@ -93,75 +104,54 @@ pub struct UnaryMinus(pub Box<Expression>);
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum InfixOperator {
-    LogicalOr(LogicalOr),
-    LogicalAnd(LogicalAnd),
-    EqualTo(EqualTo),
-    NotEqualTo(NotEqualTo),
-    GreaterThan(GreaterThan),
-    LessThan(LessThan),
-    GreaterThanOrEqualTo(GreaterThanOrEqualTo),
-    LessThanOrEqualTo(LessThanOrEqualTo),
-    Add(Add),
-    Subtract(Subtract),
-    Multiply(Multiply),
-    Divide(Divide),
-    Remainder(Remainder),
+    LogicalOr(Box<Expression>, Span, Box<Expression>),
+    LogicalAnd(Box<Expression>, Span, Box<Expression>),
+    EqualTo(Box<Expression>, Span, Box<Expression>),
+    NotEqualTo(Box<Expression>, Span, Box<Expression>),
+    GreaterThan(Box<Expression>, Span, Box<Expression>),
+    LessThan(Box<Expression>, Span, Box<Expression>),
+    GreaterThanOrEqualTo(Box<Expression>, Span, Box<Expression>),
+    LessThanOrEqualTo(Box<Expression>, Span, Box<Expression>),
+    Add(Box<Expression>, Span, Box<Expression>),
+    Subtract(Box<Expression>, Span, Box<Expression>),
+    Multiply(Box<Expression>, Span, Box<Expression>),
+    Divide(Box<Expression>, Span, Box<Expression>),
+    Remainder(Box<Expression>, Span, Box<Expression>),
     GetField(GetField),
     GetFieldNullable(GetFieldNullable),
-    RangeRightExclusive(RangeRightExclusive),
-    RangeRightInclusive(RangeRightInclusive),
+    RangeRightExclusive(Box<Expression>, Span, Box<Expression>),
+    RangeRightInclusive(Box<Expression>, Span, Box<Expression>),
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct LogicalOr(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct LogicalAnd(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct EqualTo(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct NotEqualTo(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct GreaterThan(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct LessThan(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct GreaterThanOrEqualTo(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct LessThanOrEqualTo(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct Add(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct Subtract(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct Multiply(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct Divide(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct Remainder(pub Box<Expression>, pub Box<Expression>);
+impl InfixOperator {
+    pub fn trait_name(&self) -> &'static str {
+        match self {
+            InfixOperator::LogicalOr(..) => "LogicalOr",
+            InfixOperator::LogicalAnd(..) => "LogicalAnd",
+            InfixOperator::EqualTo(..) => "PartialEq",
+            InfixOperator::NotEqualTo(..) => "PartialEq",
+            InfixOperator::GreaterThan(..) => "PartialOrd",
+            InfixOperator::LessThan(..) => "PartialOrd",
+            InfixOperator::GreaterThanOrEqualTo(..) => "PartialOrd",
+            InfixOperator::LessThanOrEqualTo(..) => "PartialOrd",
+            InfixOperator::Add(..) => "Add",
+            InfixOperator::Subtract(..) => "Subtract",
+            InfixOperator::Multiply(..) => "Multiply",
+            InfixOperator::Divide(..) => "Divide",
+            InfixOperator::Remainder(..) => "Remainder",
+            InfixOperator::GetField(..) => "GetField",
+            InfixOperator::GetFieldNullable(..) => "GetField",
+            InfixOperator::RangeRightExclusive(..) => "RangeToExlusive",
+            InfixOperator::RangeRightInclusive(..) => "RangeToInclusive",
+        }
+    }
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct GetField(pub Box<Expression>, pub Box<Expression>);
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct GetFieldNullable(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct RangeRightExclusive(pub Box<Expression>, pub Box<Expression>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct RangeRightInclusive(pub Box<Expression>, pub Box<Expression>);
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum PostfixOperator {
@@ -172,8 +162,20 @@ pub enum PostfixOperator {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Index(pub Box<Expression>, pub Vec<Expression>);
 
+impl Spanned for Index {
+    fn span(&self) -> crate::syntax::Span {
+        self.0.span().joined(&self.1.span())
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct FunctionCall(pub Box<Expression>, pub Vec<Expression>);
+
+impl Spanned for FunctionCall {
+    fn span(&self) -> crate::syntax::Span {
+        self.0.span().joined(&self.1.span())
+    }
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Path(pub Vec<Token>);

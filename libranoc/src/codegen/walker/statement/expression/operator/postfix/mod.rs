@@ -1,7 +1,6 @@
-use crate::{
-    codegen::*,
-    core::ast::{ PostfixOperator},
-};
+use crate::{codegen::*, core::ast::PostfixOperator};
+
+mod function_call;
 
 impl<'a> Walker<PostfixOperator> for Context<'a> {
     fn walk(&mut self, operator: PostfixOperator) -> Result<(), Error> {

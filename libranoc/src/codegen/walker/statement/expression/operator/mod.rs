@@ -1,10 +1,8 @@
 use crate::{codegen::*, core::ast::Operator};
 
-mod function_call;
+// mod prefix;
+mod infix;
 mod postfix;
-
-pub use function_call::*;
-pub use postfix::*;
 
 impl<'a> Walker<Operator> for Context<'a> {
     fn walk(&mut self, operator: Operator) -> Result<(), Error> {
@@ -12,9 +10,7 @@ impl<'a> Walker<Operator> for Context<'a> {
             Operator::Prefix(operator) => {
                 todo!("Prefix operator is not implemented");
             }
-            Operator::Infix(operator) => {
-                todo!("Infix operator is not implemented");
-            }
+            Operator::Infix(operator) => self.walk(operator),
             Operator::Postfix(operator) => self.walk(operator),
         }
     }

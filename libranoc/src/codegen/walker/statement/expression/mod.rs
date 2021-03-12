@@ -1,10 +1,9 @@
 use crate::{codegen::*, core::ast::Expression};
 
+mod literal;
 mod name;
 mod operator;
-
-pub use name::*;
-pub use operator::*;
+mod tuple;
 
 impl<'a> Walker<Expression> for Context<'a> {
     fn walk(&mut self, expression: Expression) -> Result<(), Error> {
@@ -15,18 +14,14 @@ impl<'a> Walker<Expression> for Context<'a> {
             Expression::Closure => {
                 todo!("closure is not implemented now")
             }
-            Expression::Literal(_) => {
-                todo!("literal is not implemented now")
-            }
+            Expression::Literal(literal) => self.walk(literal),
             Expression::Path => {
                 todo!("path is not implemented now")
             }
             Expression::Array => {
                 todo!("array is not implemented now")
             }
-            Expression::Tuple(_) => {
-                todo!("tuple is not implemented now")
-            }
+            Expression::Tuple(expressions) => self.walk(expressions),
             Expression::Init => {
                 todo!("struct/union init is not implemented now")
             }

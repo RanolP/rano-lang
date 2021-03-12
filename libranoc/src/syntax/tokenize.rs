@@ -44,6 +44,12 @@ pub trait Spanned {
     fn span(&self) -> Span;
 }
 
+impl<T> Spanned for &'_ T where T: Spanned {
+    fn span(&self) -> Span {
+        <T as Spanned>::span(self)
+    }
+}
+
 impl<T> Spanned for Vec<T>
 where
     T: Spanned,

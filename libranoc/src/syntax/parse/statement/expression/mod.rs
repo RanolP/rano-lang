@@ -60,6 +60,7 @@ pub fn parse_expression(i: ParseInput) -> ParseResult<Expression> {
                 let transformer: Transformer = Box::new(move |lhs| {
                     Expression::Operator(Operator::Infix((operator.constructor)(
                         lhs,
+                        operator.operator.span,
                         Box::new(rhs),
                     )))
                 });

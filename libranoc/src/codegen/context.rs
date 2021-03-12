@@ -136,16 +136,22 @@ impl<'a> Context<'a> {
             .export(name.as_ref(), Export::Function(id));
     }
 
-    pub fn resolve(&mut self, name: &str) -> Result<u32, Error> {
-        todo!("Context.resolve(name) is not implemented")
+    pub fn resolve(&mut self, name: &str, span: Span) -> Result<u32, Error> {
+        self.import("extern", name, span)
     }
 
-    pub fn import(&mut self, module: &str, name: &Token) -> Result<u32, Error> {
+    pub fn import(
+        &mut self,
+        module: &str,
+        name: impl AsRef<str>,
+        span: Span,
+    ) -> Result<u32, Error> {
+        let name = name.as_ref();
         let (_, ty) = self
             .import_extern_type_map
             .get(&module.to_owned())
-            .and_then(|module| module.get(&name.content))
-            .ok_or_else(|| Error::undefined_symbol(name.clone()))?;
+            .and_then(|module| module.get(name))
+            .ok_or_else(|| Error::undefined_symbol(name, span))?;
 
         let (counter, ty) = match &ty {
             EntityType::Function(id) => (
@@ -190,7 +196,7 @@ impl<'a> Context<'a> {
         let result = *counter;
         *counter += 1;
 
-        self.import_section.import(module, Some(&name.content), ty);
+        self.import_section.import(module, Some(&name), ty);
 
         Ok(result)
     }

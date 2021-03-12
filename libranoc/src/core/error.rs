@@ -1,6 +1,8 @@
+use std::fmt;
+
 use thiserror::Error;
 
-use crate::syntax::{Span, Token};
+use crate::syntax::{Span, Spanned, Token};
 
 use super::ast::Type;
 
@@ -11,6 +13,7 @@ pub enum ErrorCode {
     Redefined = 0002,
     UndefinedSymbol = 0003,
     MismatchedType = 0004,
+    Unimplemented = 0005,
 }
 
 #[derive(Debug)]
@@ -50,12 +53,12 @@ impl Error {
             ],
         }
     }
-    pub fn undefined_symbol(name: Token) -> Error {
+    pub fn undefined_symbol(name: impl fmt::Display, span: Span) -> Error {
         Error {
             code: ErrorCode::UndefinedSymbol,
-            message: format!("Undefined symbol `{}`.", name.content),
+            message: format!("Undefined symbol `{}`.", name),
             labels: vec![Label {
-                location: Location::Known(name.span.clone()),
+                location: Location::Known(span.clone()),
                 message: None,
             }],
         }
@@ -71,6 +74,16 @@ impl Error {
                     required.to_string(),
                     gotten.to_string()
                 )),
+            }],
+        }
+    }
+    pub fn unimplemented(ast: impl Spanned) -> Error {
+        Error {
+            code: ErrorCode::Unimplemented,
+            message: "Unimplemented.".to_string(),
+            labels: vec![Label {
+                location: Location::Known(ast.span()),
+                message: None,
             }],
         }
     }
