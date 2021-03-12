@@ -10,6 +10,7 @@ mod external {
         0
     }
     pub fn add(lhs: i32, rhs: i32) -> i32 {
+        dbg!(&lhs, &rhs);
         lhs + rhs
     }
 }
@@ -55,10 +56,12 @@ fn report_error(src: &String, error: Error) -> anyhow::Result<()> {
 }
 
 fn main() -> anyhow::Result<()> {
+    println!("Reading main.rano");
     let src = fs::read_to_string(PathBuf::from("main.rano"))?;
 
+    println!("Parsing main.rano");
     let tokens = syntax::tokenize(&src);
-    let ast = match syntax::parse(&tokens) {
+    let ast = match syntax::parse(tokens) {
         Ok(ast) => ast,
         Err(error) => {
             report_error(&src, error)?;
@@ -66,6 +69,7 @@ fn main() -> anyhow::Result<()> {
         }
     };
 
+    println!("Compiling main.rano");
     let (wasm_bytes, errors) = codegen::compile_wasm(ast);
 
     if errors.len() > 0 {
@@ -75,6 +79,7 @@ fn main() -> anyhow::Result<()> {
         bail!("Failed to compile sources");
     }
 
+    println!("Running main.rano");
     let store = Store::default();
     let module = Module::new(&store, &wasm_bytes)?;
 

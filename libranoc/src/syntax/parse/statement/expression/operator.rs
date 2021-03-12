@@ -1,46 +1,43 @@
 use crate::{
-    core::ast::{Expression, InfixOperatorKind, PostfixOperatorKind, PrefixOperatorKind},
+    core::ast::*,
     syntax::{parse::*, TokenKind},
 };
 
-pub enum AfterLhsOperator<'a> {
-    Infix(InfixOperatorKind, Box<Expression<'a>>),
-    Postfix(PostfixOperatorKind, Vec<Expression<'a>>),
-}
-
-pub struct OperatorBindingPowerInfix {
-    pub kind: InfixOperatorKind,
-    pub left_binding_power: u8,
+pub struct OperatorBindingPowerPrefix {
+    pub constructor: Box<dyn FnOnce(Box<Expression>) -> PrefixOperator>,
     pub right_binding_power: u8,
 }
 
-pub struct OperatorBindingPowerPrefix {
-    pub kind: PrefixOperatorKind,
+pub struct OperatorBindingPowerInfix {
+    pub constructor: Box<dyn FnOnce(Box<Expression>, Box<Expression>) -> InfixOperator>,
+    pub left_binding_power: u8,
     pub right_binding_power: u8,
 }
 
 pub struct OperatorBindingPowerPostfix {
-    pub kind: PostfixOperatorKind,
+    pub constructor: Box<dyn FnOnce(Box<Expression>, Vec<Expression>) -> PostfixOperator>,
     pub left_binding_power: u8,
+    pub tails: Box<dyn FnOnce(ParseInput) -> ParseResult<Vec<Expression>>>,
+    pub close: Box<dyn FnOnce(ParseInput) -> ParseResult<()>>,
 }
 
 pub fn parse_prefix_operator(i: ParseInput) -> ParseResult<OperatorBindingPowerPrefix> {
     alt((
         map(tag(TokenKind::PunctuationExclamationMark), |_| {
             OperatorBindingPowerPrefix {
-                kind: PrefixOperatorKind::Not,
+                constructor: Box::new(|expr| PrefixOperator::Not(Not(expr))),
                 right_binding_power: 13,
             }
         }),
         map(tag(TokenKind::PunctuationPlusSign), |_| {
             OperatorBindingPowerPrefix {
-                kind: PrefixOperatorKind::UnaryPlus,
+                constructor: Box::new(|expr| PrefixOperator::UnaryPlus(UnaryPlus(expr))),
                 right_binding_power: 13,
             }
         }),
         map(tag(TokenKind::PunctuationHyphenMinus), |_| {
             OperatorBindingPowerPrefix {
-                kind: PrefixOperatorKind::UnaryMinus,
+                constructor: Box::new(|expr| PrefixOperator::UnaryMinus(UnaryMinus(expr))),
                 right_binding_power: 13,
             }
         }),
@@ -51,119 +48,129 @@ pub fn parse_infix_operator(i: ParseInput) -> ParseResult<OperatorBindingPowerIn
     alt((
         map(tag(TokenKind::PunctuationsLogicalOr), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::LogicalOr,
+                constructor: Box::new(|lhs, rhs| InfixOperator::LogicalOr(LogicalOr(lhs, rhs))),
                 left_binding_power: 1,
                 right_binding_power: 2,
             }
         }),
         map(tag(TokenKind::PunctuationsLogicalAnd), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::LogicalAnd,
+                constructor: Box::new(|lhs, rhs| InfixOperator::LogicalAnd(LogicalAnd(lhs, rhs))),
                 left_binding_power: 3,
                 right_binding_power: 4,
             }
         }),
         map(tag(TokenKind::PunctuationsEqualTo), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::EqualTo,
+                constructor: Box::new(|lhs, rhs| InfixOperator::EqualTo(EqualTo(lhs, rhs))),
                 left_binding_power: 5,
                 right_binding_power: 6,
             }
         }),
         map(tag(TokenKind::PunctuationsNotEqualTo), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::NotEqualTo,
+                constructor: Box::new(|lhs, rhs| InfixOperator::NotEqualTo(NotEqualTo(lhs, rhs))),
                 left_binding_power: 5,
                 right_binding_power: 6,
             }
         }),
         map(tag(TokenKind::PunctuationGreaterThanSign), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::GreaterThan,
+                constructor: Box::new(|lhs, rhs| InfixOperator::GreaterThan(GreaterThan(lhs, rhs))),
                 left_binding_power: 7,
                 right_binding_power: 8,
             }
         }),
         map(tag(TokenKind::PunctuationLessThanSign), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::LessThan,
+                constructor: Box::new(|lhs, rhs| InfixOperator::LessThan(LessThan(lhs, rhs))),
                 left_binding_power: 7,
                 right_binding_power: 8,
             }
         }),
         map(tag(TokenKind::PunctuationsGreaterThanOrEqualTo), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::GreaterThanOrEqualTo,
+                constructor: Box::new(|lhs, rhs| {
+                    InfixOperator::GreaterThanOrEqualTo(GreaterThanOrEqualTo(lhs, rhs))
+                }),
                 left_binding_power: 7,
                 right_binding_power: 8,
             }
         }),
         map(tag(TokenKind::PunctuationsLessThanOrEqualTo), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::LessThanOrEqualTo,
+                constructor: Box::new(|lhs, rhs| {
+                    InfixOperator::LessThanOrEqualTo(LessThanOrEqualTo(lhs, rhs))
+                }),
                 left_binding_power: 7,
                 right_binding_power: 8,
             }
         }),
         map(tag(TokenKind::PunctuationPlusSign), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::Add,
+                constructor: Box::new(|lhs, rhs| InfixOperator::Add(Add(lhs, rhs))),
                 left_binding_power: 9,
                 right_binding_power: 10,
             }
         }),
         map(tag(TokenKind::PunctuationHyphenMinus), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::Subtract,
+                constructor: Box::new(|lhs, rhs| InfixOperator::Subtract(Subtract(lhs, rhs))),
                 left_binding_power: 9,
                 right_binding_power: 10,
             }
         }),
         map(tag(TokenKind::PunctuationAsterisk), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::Multiply,
+                constructor: Box::new(|lhs, rhs| InfixOperator::Multiply(Multiply(lhs, rhs))),
                 left_binding_power: 11,
                 right_binding_power: 12,
             }
         }),
         map(tag(TokenKind::PunctuationSolidus), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::Divide,
+                constructor: Box::new(|lhs, rhs| InfixOperator::Divide(Divide(lhs, rhs))),
                 left_binding_power: 11,
                 right_binding_power: 12,
             }
         }),
         map(tag(TokenKind::PunctuationPercentSign), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::Remainder,
+                constructor: Box::new(|lhs, rhs| InfixOperator::Remainder(Remainder(lhs, rhs))),
                 left_binding_power: 11,
                 right_binding_power: 12,
             }
         }),
         map(tag(TokenKind::PunctuationFullStop), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::GetField,
+                constructor: Box::new(|lhs, rhs| InfixOperator::GetField(GetField(lhs, rhs))),
                 left_binding_power: 17,
                 right_binding_power: 16,
             }
         }),
         map(tag(TokenKind::PunctuationsGetFieldNullable), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::GetFieldNullable,
+                constructor: Box::new(|lhs, rhs| {
+                    InfixOperator::GetFieldNullable(GetFieldNullable(lhs, rhs))
+                }),
                 left_binding_power: 17,
                 right_binding_power: 16,
             }
         }),
         map(tag(TokenKind::PunctuationsRangeRightExclusive), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::RangeRightExclusive,
+                constructor: Box::new(|lhs, rhs| {
+                    InfixOperator::RangeRightExclusive(RangeRightExclusive(lhs, rhs))
+                }),
                 left_binding_power: 19,
                 right_binding_power: 18,
             }
         }),
         map(tag(TokenKind::PunctuationsRangeRightInclusive), |_| {
             OperatorBindingPowerInfix {
-                kind: InfixOperatorKind::RangeRightInclusive,
+                constructor: Box::new(|lhs, rhs| {
+                    InfixOperator::RangeRightInclusive(RangeRightInclusive(lhs, rhs))
+                }),
                 left_binding_power: 19,
                 right_binding_power: 18,
             }
@@ -174,8 +181,10 @@ pub fn parse_infix_operator(i: ParseInput) -> ParseResult<OperatorBindingPowerIn
 pub fn parse_postfix_operator(i: ParseInput) -> ParseResult<OperatorBindingPowerPostfix> {
     map(tag(TokenKind::PunctuationLeftSquareBracket), |_| {
         OperatorBindingPowerPostfix {
-            kind: PostfixOperatorKind::Index,
+            constructor: Box::new(|expr, tails| PostfixOperator::Index(Index(expr, tails))),
             left_binding_power: 14,
+            tails: Box::new(map(parse_expression, |expr| vec![expr])),
+            close: Box::new(map(tag(TokenKind::PunctuationRightSquareBracket), |_| ())),
         }
     })(i)
 }

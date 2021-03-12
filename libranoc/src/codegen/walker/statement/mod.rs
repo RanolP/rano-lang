@@ -5,10 +5,17 @@ mod expression;
 
 pub use declaration::*;
 pub use expression::*;
+use wasm_encoder::Instruction;
 
-pub fn walk_statement(context: &mut Context, statement: Statement) -> Result<(), Error> {
-    match statement {
-        Statement::Declaration(declaration) => walk_declaration(context, declaration),
-        Statement::Expression(expression) => walk_expression(context, expression),
+impl<'a> Walker<Statement> for Context<'a> {
+    fn walk(&mut self, statement: Statement) -> Result<(), Error> {
+        match statement {
+            Statement::Declaration(declaration) => self.walk(declaration),
+            Statement::Expression(expression) => {
+                self.walk(expression)?;
+                self.instructions.push(Instruction::Drop);
+                Ok(())
+            }
+        }
     }
 }

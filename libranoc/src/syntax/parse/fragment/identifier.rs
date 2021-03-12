@@ -1,12 +1,9 @@
-use crate::{
-    core::ast::Identifier,
-    syntax::{parse::*, TokenKind},
-};
+use crate::syntax::{parse::*, TokenKind};
 
-pub fn parse_identifier(i: ParseInput) -> ParseResult<Identifier> {
+pub fn parse_identifier(i: ParseInput) -> ParseResult<Token> {
     let (i, token) = any(i)?;
-    if let TokenKind::IdentifierIdentifier(content) = &token.kind {
-        Ok((i, Identifier(token.clone(), content.clone())))
+    if let TokenKind::IdentifierIdentifier(_) = &token.kind {
+        Ok((i, token))
     } else {
         err_tag(i)
     }

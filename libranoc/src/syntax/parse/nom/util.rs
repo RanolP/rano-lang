@@ -13,23 +13,21 @@ pub use ::nom::{
 };
 
 #[inline(always)]
-pub fn err_kind<'a, T, Error: ParseError<ParseInput<'a>>>(
-    i: ParseInput<'a>,
+pub fn err_kind<T, Error: ParseError<ParseInput>>(
+    i: ParseInput,
     kind: ErrorKind,
-) -> IResult<ParseInput<'a>, T, Error> {
+) -> IResult<ParseInput, T, Error> {
     Err(Err::Error(Error::from_error_kind(i, kind)))
 }
 
 #[inline(always)]
-pub fn err_tag<'a, T, Error: ParseError<ParseInput<'a>>>(
-    i: ParseInput<'a>,
-) -> IResult<ParseInput<'a>, T, Error> {
+pub fn err_tag<T, Error: ParseError<ParseInput>>(i: ParseInput) -> IResult<ParseInput, T, Error> {
     err_kind(i, ErrorKind::Tag)
 }
 
-pub fn satisfy<'a, F, Error: ParseError<ParseInput<'a>>>(
+pub fn satisfy<F, Error: ParseError<ParseInput>>(
     cond: F,
-) -> impl Fn(ParseInput<'a>) -> IResult<ParseInput, Token, Error>
+) -> impl Fn(ParseInput) -> IResult<ParseInput, Token, Error>
 where
     F: Fn(&Token) -> bool,
 {
@@ -42,22 +40,20 @@ where
     }
 }
 
-pub fn any<'a, Error: ParseError<ParseInput<'a>>>(
-    i: ParseInput<'a>,
-) -> IResult<ParseInput, &'a Token, Error> {
+pub fn any<Error: ParseError<ParseInput>>(i: ParseInput) -> IResult<ParseInput, Token, Error> {
     match i.slice_index(1) {
         Ok(index) => {
             let (i, part) = i.take_split(index);
-            Ok((i, &part.tokens[0]))
+            Ok((i, part.tokens[0].clone()))
         }
         Err(_needed) => err_kind(i, ErrorKind::Eof),
     }
 }
 
-pub fn tag<'a, Error: ParseError<ParseInput<'a>>>(
+pub fn tag<Error: ParseError<ParseInput>>(
     tag: TokenKind,
-) -> impl Fn(ParseInput<'a>) -> IResult<ParseInput<'a>, Token, Error> {
-    move |i| match (i).iter_elements().next().map(|t| {
+) -> impl Fn(ParseInput) -> IResult<ParseInput, Token, Error> {
+    move |i| match i.iter_elements().next().map(|t| {
         let b = t.kind == tag;
         (t, b)
     }) {

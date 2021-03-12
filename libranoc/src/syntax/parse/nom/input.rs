@@ -1,46 +1,42 @@
-use std::{
-    iter::{Cloned, Enumerate},
-    ops::RangeFrom,
-    slice::Iter,
-};
+use std::{iter::Enumerate, ops::RangeFrom, vec::IntoIter};
 
 use nom::{InputIter, InputLength, InputTake, Needed, Slice};
 
 use crate::syntax::Token;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct ParseInput<'a> {
-    pub(crate) tokens: &'a [Token<'a>],
+pub struct ParseInput {
+    pub(crate) tokens: Vec<Token>,
     pub(crate) binding_power: u8,
 }
 
-impl<'a> ParseInput<'a> {
-    pub(crate) fn new(tokens: &'a [Token]) -> Self {
+impl ParseInput {
+    pub(crate) fn new(tokens: Vec<Token>) -> Self {
         ParseInput {
             tokens,
             binding_power: 0,
         }
     }
 
-    pub(crate) fn with_binding_power(&self, binding_power: u8) -> Self {
+    pub(crate) fn with_binding_power(self, binding_power: u8) -> Self {
         ParseInput {
-            tokens: &self.tokens,
+            tokens: self.tokens,
             binding_power,
         }
     }
 }
 
-impl<'a> InputLength for ParseInput<'a> {
+impl InputLength for ParseInput {
     #[inline]
     fn input_len(&self) -> usize {
         self.tokens.len()
     }
 }
 
-impl<'a> InputIter for ParseInput<'a> {
-    type Item = Token<'a>;
+impl InputIter for ParseInput {
+    type Item = Token;
     type Iter = Enumerate<Self::IterElem>;
-    type IterElem = Cloned<Iter<'a, Token<'a>>>;
+    type IterElem = IntoIter<Token>;
 
     #[inline]
     fn iter_indices(&self) -> Self::Iter {
@@ -48,7 +44,7 @@ impl<'a> InputIter for ParseInput<'a> {
     }
     #[inline]
     fn iter_elements(&self) -> Self::IterElem {
-        self.tokens.iter().cloned()
+        self.tokens.clone().into_iter()
     }
     #[inline]
     fn position<P>(&self, predicate: P) -> Option<usize>
@@ -67,11 +63,11 @@ impl<'a> InputIter for ParseInput<'a> {
     }
 }
 
-impl<'a> InputTake for ParseInput<'a> {
+impl InputTake for ParseInput {
     #[inline]
     fn take(&self, count: usize) -> Self {
         ParseInput {
-            tokens: &self.tokens[0..count],
+            tokens: self.tokens[0..count].to_vec(),
             binding_power: self.binding_power,
         }
     }
@@ -80,21 +76,21 @@ impl<'a> InputTake for ParseInput<'a> {
         let (prefix, suffix) = self.tokens.split_at(count);
         (
             ParseInput {
-                tokens: suffix,
+                tokens: suffix.to_vec(),
                 binding_power: self.binding_power,
             },
             ParseInput {
-                tokens: prefix,
+                tokens: prefix.to_vec(),
                 binding_power: self.binding_power,
             },
         )
     }
 }
 
-impl<'a> Slice<RangeFrom<usize>> for ParseInput<'a> {
+impl Slice<RangeFrom<usize>> for ParseInput {
     fn slice(&self, range: RangeFrom<usize>) -> Self {
         ParseInput {
-            tokens: &self.tokens[range],
+            tokens: self.tokens[range].to_vec(),
             binding_power: self.binding_power,
         }
     }

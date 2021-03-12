@@ -2,12 +2,15 @@ use thiserror::Error;
 
 use crate::syntax::{Span, Token};
 
+use super::ast::Type;
+
 #[derive(Debug)]
 #[repr(u16)]
 pub enum ErrorCode {
     SyntaxError = 0001,
     Redefined = 0002,
     UndefinedSymbol = 0003,
+    MismatchedType = 0004,
 }
 
 #[derive(Debug)]
@@ -50,17 +53,31 @@ impl Error {
     pub fn undefined_symbol(name: Token) -> Error {
         Error {
             code: ErrorCode::UndefinedSymbol,
-            message: format!("Undefined symbol `{}`.", name.slice),
+            message: format!("Undefined symbol `{}`.", name.content),
             labels: vec![Label {
                 location: Location::Known(name.span.clone()),
                 message: None,
             }],
         }
     }
+    pub fn mismatched_type(required: Type, gotten: Type, location: Span) -> Error {
+        Error {
+            code: ErrorCode::MismatchedType,
+            message: "Mismatched types.".to_string(),
+            labels: vec![Label {
+                location: Location::Known(location),
+                message: Some(format!(
+                    "Required `{}` but got `{}`",
+                    required.to_string(),
+                    gotten.to_string()
+                )),
+            }],
+        }
+    }
 }
 
-impl<'a> From<::nom::Err<crate::syntax::Error<'a>>> for Error {
-    fn from(err: ::nom::Err<crate::syntax::Error<'a>>) -> Self {
+impl<'a> From<::nom::Err<crate::syntax::Error>> for Error {
+    fn from(err: ::nom::Err<crate::syntax::Error>) -> Self {
         let (message, labels) = match err {
             ::nom::Err::Incomplete(needed) => (
                 format!(
@@ -78,7 +95,7 @@ impl<'a> From<::nom::Err<crate::syntax::Error<'a>>> for Error {
             ::nom::Err::Error(error) | ::nom::Err::Failure(error) => {
                 let token = &error.input.tokens[0];
                 (
-                    format!("Unexpected token: {}", token.slice),
+                    format!("Unexpected token: {}", token.content),
                     vec![Label {
                         location: Location::Known(token.span.clone()),
                         message: None,

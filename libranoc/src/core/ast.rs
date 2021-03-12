@@ -1,14 +1,16 @@
+use std::fmt;
+
 use crate::syntax::Token;
 
 #[derive(Debug, PartialEq)]
-pub struct Module<'a> {
-    pub(crate) nodes: Vec<Node<'a>>,
+pub struct Module {
+    pub(crate) nodes: Vec<Node>,
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Node<'a> {
+pub enum Node {
     Directive,
-    Statement(Statement<'a>),
+    Statement(Statement),
 }
 
 // TODO: directives like #![deny(unused_variable)]
@@ -16,14 +18,14 @@ pub enum Node<'a> {
 pub struct Directive {}
 
 #[derive(Debug, PartialEq)]
-pub enum Statement<'a> {
-    Declaration(Declaration<'a>),
-    Expression(Expression<'a>),
+pub enum Statement {
+    Declaration(Declaration),
+    Expression(Expression),
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Declaration<'a> {
-    FunctionDeclaration(FunctionDeclaration<'a>),
+pub enum Declaration {
+    FunctionDeclaration(FunctionDeclaration),
     VariableDeclaration,
     StructDeclaration,
     UnionDeclaration,
@@ -33,29 +35,29 @@ pub enum Declaration<'a> {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct FunctionDeclaration<'a> {
+pub struct FunctionDeclaration {
     pub is_pub: bool,
     pub is_extern: bool,
-    pub name: Identifier<'a>,
+    pub name: Token,
     // pub type_parameters: Vec<TypeParameter>,
-    pub parameters: Vec<(Pattern<'a>, Type<'a>)>,
-    pub return_type: Type<'a>,
+    pub parameters: Vec<(Pattern, Type)>,
+    pub return_type: Type,
     // pub where_clauses: Vec<WhereClause>,
-    pub body: Vec<Statement<'a>>,
-    pub last_expression: Option<Expression<'a>>,
+    pub body: Vec<Statement>,
+    pub last_expression: Option<Expression>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Expression<'a> {
+pub enum Expression {
     Match,
     Closure,
     Literal(Literal),
     Path,
     Array,
-    Tuple(Vec<Expression<'a>>),
+    Tuple(Vec<Expression>),
     Init,
-    Operator(Operator<'a>),
-    Name(Name<'a>),
+    Operator(Operator),
+    Name(Name),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -68,83 +70,224 @@ pub enum Literal {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Operator<'a> {
-    Prefix(PrefixOperatorKind, Box<Expression<'a>>),
-    Infix(Box<Expression<'a>>, InfixOperatorKind, Box<Expression<'a>>),
-    Postfix(
-        Box<Expression<'a>>,
-        PostfixOperatorKind,
-        Vec<Expression<'a>>,
-    ),
+pub enum Operator {
+    Prefix(PrefixOperator),
+    Infix(InfixOperator),
+    Postfix(PostfixOperator),
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum PrefixOperatorKind {
-    Not,
-    UnaryPlus,
-    UnaryMinus,
+pub enum PrefixOperator {
+    Not(Not),
+    UnaryPlus(UnaryPlus),
+    UnaryMinus(UnaryMinus),
 }
 #[derive(Debug, PartialEq, Clone)]
-pub enum InfixOperatorKind {
-    LogicalOr,
-    LogicalAnd,
-    EqualTo,
-    NotEqualTo,
-    GreaterThan,
-    LessThan,
-    GreaterThanOrEqualTo,
-    LessThanOrEqualTo,
-    Add,
-    Subtract,
-    Multiply,
-    Divide,
-    Remainder,
-    GetField,
-    GetFieldNullable,
-    RangeRightExclusive,
-    RangeRightInclusive,
+pub struct Not(pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct UnaryPlus(pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct UnaryMinus(pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum InfixOperator {
+    LogicalOr(LogicalOr),
+    LogicalAnd(LogicalAnd),
+    EqualTo(EqualTo),
+    NotEqualTo(NotEqualTo),
+    GreaterThan(GreaterThan),
+    LessThan(LessThan),
+    GreaterThanOrEqualTo(GreaterThanOrEqualTo),
+    LessThanOrEqualTo(LessThanOrEqualTo),
+    Add(Add),
+    Subtract(Subtract),
+    Multiply(Multiply),
+    Divide(Divide),
+    Remainder(Remainder),
+    GetField(GetField),
+    GetFieldNullable(GetFieldNullable),
+    RangeRightExclusive(RangeRightExclusive),
+    RangeRightInclusive(RangeRightInclusive),
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum PostfixOperatorKind {
-    Index,
-    FunctionCall,
-}
-#[derive(Debug, PartialEq)]
-pub struct Path<'a>(pub Vec<Identifier<'a>>);
+pub struct LogicalOr(pub Box<Expression>, pub Box<Expression>);
 
-#[derive(Debug, PartialEq)]
-pub enum TypeParameter<'a> {
+#[derive(Debug, PartialEq, Clone)]
+pub struct LogicalAnd(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct EqualTo(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct NotEqualTo(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct GreaterThan(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct LessThan(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct GreaterThanOrEqualTo(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct LessThanOrEqualTo(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Add(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Subtract(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Multiply(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Divide(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Remainder(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct GetField(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct GetFieldNullable(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct RangeRightExclusive(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct RangeRightInclusive(pub Box<Expression>, pub Box<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum PostfixOperator {
+    Index(Index),
+    FunctionCall(FunctionCall),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Index(pub Box<Expression>, pub Vec<Expression>);
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct FunctionCall(pub Box<Expression>, pub Vec<Expression>);
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Path(pub Vec<Token>);
+
+impl fmt::Display for Path {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.0
+                .iter()
+                .map(|token| token.content.clone())
+                .collect::<Vec<_>>()
+                .join(".")
+        )
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum TypeParameter {
     Star,
-    Specific(Type<'a>),
+    Specific(Type),
 }
 
-#[derive(Debug, PartialEq)]
-pub enum Type<'a> {
+impl fmt::Display for TypeParameter {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TypeParameter::Star => {
+                write!(f, "*")
+            }
+            TypeParameter::Specific(ty) => {
+                write!(f, "{}", ty)
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Type {
     Basic {
-        base: Path<'a>,
-        type_parameters: Vec<TypeParameter<'a>>,
+        base: Path,
+        type_parameters: Vec<TypeParameter>,
     },
-    Tuple(Vec<Type<'a>>),
-    Impl(Box<Type<'a>>),
-    Nullable(Box<Type<'a>>),
+    Tuple(Vec<Type>),
+    Impl(Box<Type>),
+    Nullable(Box<Type>),
     Function {
         // generic and where clause?
-        parameters_type: Vec<Type<'a>>,
-        return_type: Box<Type<'a>>,
+        parameters_type: Vec<Type>,
+        return_type: Box<Type>,
     },
 }
 
+impl fmt::Display for Type {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Type::Basic {
+                base,
+                type_parameters,
+            } => {
+                write!(
+                    f,
+                    "{}<{}>",
+                    base,
+                    type_parameters
+                        .iter()
+                        .map(|type_parameter| type_parameter.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            }
+            Type::Tuple(types) => {
+                write!(
+                    f,
+                    "({})",
+                    types
+                        .iter()
+                        .map(|ty| format!("{},", ty))
+                        .collect::<Vec<_>>()
+                        .join("")
+                )
+            }
+            Type::Impl(ty) => {
+                write!(f, "impl {}", ty)
+            }
+            Type::Nullable(ty) => {
+                write!(f, "{}?", ty)
+            }
+            Type::Function {
+                parameters_type,
+                return_type,
+            } => {
+                write!(
+                    f,
+                    "({}) -> {}",
+                    parameters_type
+                        .iter()
+                        .map(|ty| ty.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                    return_type
+                )
+            }
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
-pub enum Pattern<'a> {
-    Slot(Name<'a>),
+pub enum Pattern {
+    Slot(Name),
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Name<'a> {
-    Ident(Identifier<'a>),
+pub enum Name {
+    Ident(Token),
     Placeholder,
 }
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct Identifier<'a>(pub Token<'a>, pub String);

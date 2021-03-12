@@ -13,7 +13,7 @@ pub use crate::syntax::{
     Token, TokenKind,
 };
 
-pub fn parse<'a>(tokens: &'a [Token]) -> crate::core::Result<Module<'a>> {
+pub fn parse(tokens: Vec<Token>) -> crate::core::Result<Module> {
     let i = ParseInput::new(tokens);
     let (_, nodes) = all_consuming(many0(parse_statement_node))(i)?;
     Ok(Module { nodes })

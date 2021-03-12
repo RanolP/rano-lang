@@ -11,7 +11,7 @@ use crate::{
     syntax::{Span, Token},
 };
 
-pub struct Context {
+pub struct Context<'a> {
     import_section: ImportSection,
     import_index_function: u32,
     import_index_table: u32,
@@ -34,10 +34,12 @@ pub struct Context {
     data_segment_last_id: u32,
     data_segment_last_offset: i32,
 
+    pub instructions: Vec<Instruction<'a>>,
+
     compilation_errors: Vec<Error>,
 }
 
-impl Context {
+impl<'a> Context<'a> {
     pub fn new() -> Self {
         Context {
             import_section: ImportSection::new(),
@@ -61,6 +63,8 @@ impl Context {
             data_section: DataSection::new(),
             data_segment_last_id: 0,
             data_segment_last_offset: 0,
+
+            instructions: Vec::new(),
 
             compilation_errors: Vec::new(),
         }
@@ -91,14 +95,14 @@ impl Context {
             .import_extern_type_map
             .entry(module.into())
             .or_default();
-        if let Some((before_span, _)) = module.get(&name.slice.to_string()) {
+        if let Some((before_span, _)) = module.get(&name.content) {
             return Err(Error::redefined(
-                name.slice.to_string(),
+                name.content,
                 before_span.clone(),
                 name.span,
             ));
         } else {
-            module.insert(name.slice.to_string(), (name.span.clone(), ty));
+            module.insert(name.content, (name.span, ty));
         }
 
         Ok(())
@@ -132,7 +136,7 @@ impl Context {
             .export(name.as_ref(), Export::Function(id));
     }
 
-    pub fn resolve(&mut self, name: &Token) -> Result<u32, Error> {
+    pub fn resolve(&mut self, name: &str) -> Result<u32, Error> {
         todo!("Context.resolve(name) is not implemented")
     }
 
@@ -140,7 +144,7 @@ impl Context {
         let (_, ty) = self
             .import_extern_type_map
             .get(&module.to_owned())
-            .and_then(|module| module.get(&name.slice.to_owned()))
+            .and_then(|module| module.get(&name.content))
             .ok_or_else(|| Error::undefined_symbol(name.clone()))?;
 
         let (counter, ty) = match &ty {
@@ -186,7 +190,7 @@ impl Context {
         let result = *counter;
         *counter += 1;
 
-        self.import_section.import(module, Some(name.slice), ty);
+        self.import_section.import(module, Some(&name.content), ty);
 
         Ok(result)
     }

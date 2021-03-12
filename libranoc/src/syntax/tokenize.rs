@@ -1,4 +1,7 @@
-use std::ops::Range;
+use std::{
+    cmp::{max, min},
+    ops::{Range, RangeBounds},
+};
 
 use logos::Lexer;
 pub use logos::Logos;
@@ -17,11 +20,45 @@ pub struct Span {
     pub len: usize,
 }
 
+impl Span {
+    pub const EMPTY: Span = Span {
+        range: usize::MAX..usize::MIN,
+        line: 0,
+        column: 0,
+        len: 0,
+    };
+
+    pub fn joined(&self, other: &Span) -> Span {
+        let range = min(self.range.start, other.range.start)..max(self.range.end, other.range.end);
+        let len = range.end - range.start;
+        Span {
+            range,
+            line: min(self.line, other.line),
+            column: min(self.column, other.column),
+            len,
+        }
+    }
+}
+
+pub trait Spanned {
+    fn span(&self) -> Span;
+}
+
+impl<T> Spanned for Vec<T>
+where
+    T: Spanned,
+{
+    fn span(&self) -> Span {
+        self.iter()
+            .fold(Span::EMPTY, |acc, curr| acc.joined(&curr.span()))
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
-pub struct Token<'a> {
+pub struct Token {
     pub kind: TokenKind,
     pub span: Span,
-    pub slice: &'a str,
+    pub content: String,
 }
 
 #[derive(Logos, Debug, PartialEq, Clone)]
@@ -235,7 +272,7 @@ struct RanoLexer<'a> {
 }
 
 impl<'a> Iterator for RanoLexer<'a> {
-    type Item = Token<'a>;
+    type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.logos_lexer.next().map(|kind| Token {
@@ -246,7 +283,7 @@ impl<'a> Iterator for RanoLexer<'a> {
                 column: self.logos_lexer.span().end - self.logos_lexer.extras.last_linefeed,
                 len: self.logos_lexer.span().len(),
             },
-            slice: self.logos_lexer.slice(),
+            content: self.logos_lexer.slice().to_string(),
         })
     }
 }

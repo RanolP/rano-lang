@@ -10,7 +10,12 @@ pub(super) use walker::*;
 pub fn compile_wasm(module: Module) -> (Vec<u8>, Vec<Error>) {
     let mut context = Context::new();
 
-    walk_module(&mut context, module);
+    match context.walk(module) {
+        Ok(()) => {}
+        Err(error) => {
+            context.add_compilation_error(error);
+        }
+    }
 
     context.finish()
 }
