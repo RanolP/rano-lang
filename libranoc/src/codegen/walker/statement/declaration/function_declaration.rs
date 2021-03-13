@@ -20,26 +20,17 @@ impl<'a> Walker<FunctionDeclaration> for Context<'a> {
         } else {
             let mut body = Vec::new();
             std::mem::swap(&mut self.instructions, &mut body);
-            for statement in function_declaration
-                .body
-                .clone()
-                .map(|block| block.body)
-                .unwrap_or_else(|| Vec::new())
-            {
-                self.walk(statement)?;
-            }
-            if let Some(last_expression) = function_declaration
-                .body
-                .and_then(|block| block.last_expression)
-            {
-                self.walk(last_expression)?;
-                self.instructions.push(Instruction::End);
+            if let Some(body) = function_declaration.body.clone() {
+                self.walk(body)?;
             }
             std::mem::swap(&mut self.instructions, &mut body);
-            if !matches!(body.last(), Some(Instruction::End)) {
+            if function_declaration
+                .body
+                .and_then(|block| block.last_expression)
+                .is_none()
+            {
                 if matches!(&function_declaration.return_type, Type::Tuple(v) if v.is_empty()) {
                     body.push(Instruction::I32Const(0));
-                    body.push(Instruction::End);
                 } else {
                     return Err(Error::mismatched_type(
                         function_declaration.return_type,
@@ -48,6 +39,7 @@ impl<'a> Walker<FunctionDeclaration> for Context<'a> {
                     ));
                 }
             }
+            body.push(Instruction::End);
             self.implement_function(id, body);
         }
         if function_declaration.is_pub {

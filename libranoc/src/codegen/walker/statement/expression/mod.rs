@@ -4,6 +4,8 @@ mod literal;
 mod name;
 mod operator;
 mod tuple;
+mod r#if;
+mod block;
 
 impl<'a> Walker<Expression> for Context<'a> {
     fn walk(&mut self, expression: Expression) -> Result<(), Error> {
@@ -27,7 +29,7 @@ impl<'a> Walker<Expression> for Context<'a> {
             }
             Expression::Operator(operator) => self.walk(operator),
             Expression::Name(name) => self.walk(name),
-            Expression::If(r#if) => todo!("if is not implemented now"),
+            Expression::If(r#if) => self.walk(r#if),
         }
     }
 }

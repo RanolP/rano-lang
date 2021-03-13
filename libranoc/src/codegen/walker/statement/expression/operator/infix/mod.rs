@@ -32,16 +32,22 @@ impl<'a> Walker<InfixOperator> for Context<'a> {
                 let to_negate = matches!(operator, InfixOperator::NotEqualTo(..));
                 let lhs_type = "i32";
                 let rhs_type = "i32";
-                let function_id = self.import(
+                let partial_eq = self.import(
                     "extern",
                     format!("PartialEq__{}_{}", lhs_type, rhs_type),
                     operator_span.clone(),
                 )?;
+                let result_type = "i32";
                 self.walk(lhs)?;
                 self.walk(rhs)?;
-                self.instructions.push(Instruction::Call(function_id));
+                self.instructions.push(Instruction::Call(partial_eq));
                 if to_negate {
-                    todo!()
+                    let not = self.import(
+                        "extern",
+                        format!("Not__{}", result_type),
+                        operator_span.clone(),
+                    )?;
+                    self.instructions.push(Instruction::Call(not));
                 }
                 Ok(())
             }
