@@ -14,6 +14,7 @@ impl<'a> Walker<Else> for Context<'a> {
 
 impl<'a> Walker<If> for Context<'a> {
     fn walk(&mut self, r#if: If) -> Result<(), Error> {
+        self.walk(r#if.condition)?;
         // TODO
         // we all pretend to be the i32 on the good side.
         // but what if we're not the i32 on the other?
@@ -25,6 +26,7 @@ impl<'a> Walker<If> for Context<'a> {
             self.walk(r#else)?;
         }
         self.instructions.push(Instruction::End);
+
         Ok(())
     }
 }

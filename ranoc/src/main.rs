@@ -18,6 +18,9 @@ mod ops {
     pub fn subtract_i32_i32(lhs: i32, rhs: i32) -> i32 {
         lhs - rhs
     }
+    pub fn cmp_i32_i32(lhs: i32, rhs: i32) -> i32 {
+        lhs - rhs
+    }
 }
 
 fn report_error(src: &String, error: Error) -> anyhow::Result<()> {
@@ -93,6 +96,7 @@ fn main() -> anyhow::Result<()> {
             "show" => Function::new_native(&store, external::show),
             "Add__i32_i32" => Function::new_native(&store, ops::add_i32_i32),
             "Subtract__i32_i32" => Function::new_native(&store, ops::subtract_i32_i32),
+            "PartialOrd__i32_i32" => Function::new_native(&store, ops::cmp_i32_i32),
         },
     };
     let instance = Instance::new(&module, &import_object)?;

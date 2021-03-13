@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use wasm_encoder::{
     CodeSection, DataSection, EntityType, Export, ExportSection, Function, FunctionSection,
@@ -20,6 +20,9 @@ pub struct Context<'a> {
     import_index_instance: u32,
     import_index_module: u32,
     import_extern_type_map: HashMap<String, HashMap<String, (Span, EntityType)>>,
+
+    imports: HashMap<String, u32>,
+    locals: HashMap<String, VecDeque<u32>>,
 
     type_section: TypeSection,
     type_section_last_id: u32,
@@ -50,6 +53,9 @@ impl<'a> Context<'a> {
             import_index_instance: 0,
             import_index_module: 0,
             import_extern_type_map: HashMap::new(),
+
+            imports: HashMap::new(),
+            locals: HashMap::new(),
 
             type_section: TypeSection::new(),
             type_section_last_id: 0,
@@ -136,17 +142,36 @@ impl<'a> Context<'a> {
             .export(name.as_ref(), Export::Function(id));
     }
 
-    pub fn resolve(&mut self, name: &str, span: Span) -> Result<u32, Error> {
-        self.import("extern", name, span)
+    pub fn set_local(&mut self, name: String, id: u32) {
+        self.locals
+            .entry(name)
+            .or_insert(VecDeque::new())
+            .push_back(id);
     }
 
-    pub fn import(
-        &mut self,
-        module: &str,
-        name: impl AsRef<str>,
-        span: Span,
-    ) -> Result<u32, Error> {
-        let name = name.as_ref();
+    pub fn get_local(&mut self, name: &String, span: Span) -> Result<u32, Error> {
+        self.locals
+            .get(name)
+            .and_then(|deque| deque.back())
+            .cloned()
+            .ok_or_else(|| Error::undefined_symbol(name, span))
+    }
+
+    pub fn remove_local(&mut self, name: &String) {
+        if let Some(deque) = self.locals.get_mut(name) {
+            deque.pop_back();
+        }
+    }
+
+    pub fn resolve(&mut self, name: &String, span: Span) -> Result<u32, Error> {
+        self.get_local(name, span.clone())
+            .or(self.import("extern", name, span.clone()))
+    }
+
+    pub fn import(&mut self, module: &str, name: &String, span: Span) -> Result<u32, Error> {
+        if let Some(id) = self.imports.get(name) {
+            return Ok(*id);
+        }
         let (_, ty) = self
             .import_extern_type_map
             .get(&module.to_owned())
@@ -197,6 +222,8 @@ impl<'a> Context<'a> {
         *counter += 1;
 
         self.import_section.import(module, Some(&name), ty);
+
+        self.imports.insert(name.clone(), result);
 
         Ok(result)
     }

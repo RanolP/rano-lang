@@ -9,7 +9,7 @@ pub fn parse_group_tuple_expression(i: ParseInput) -> ParseResult<Expression> {
         tag(TokenKind::PunctuationLeftParenthesis),
         |i| {
             let (i, elements) =
-                separated_list1(tag(TokenKind::PunctuationComma), parse_expression)(i)?;
+                separated_list0(tag(TokenKind::PunctuationComma), parse_expression)(i)?;
             let (i, last_comma) = opt(tag(TokenKind::PunctuationComma))(i)?;
             Ok((i, (elements, last_comma.is_some())))
         },

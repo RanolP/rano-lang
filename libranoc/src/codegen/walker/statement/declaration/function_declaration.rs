@@ -6,11 +6,13 @@ impl<'a> Walker<FunctionDeclaration> for Context<'a> {
     fn walk(&mut self, function_declaration: FunctionDeclaration) -> Result<(), Error> {
         let parameters_type: Vec<_> = function_declaration
             .parameters
-            .into_iter()
+            .iter()
+            .cloned()
             .flat_map(|(_, ty)| self.convert_type(ty))
             .collect();
         let return_type = self.convert_type(function_declaration.return_type.clone());
         let id = self.declare_function_type(parameters_type, return_type);
+
         if function_declaration.is_extern {
             self.declare_extern_type(
                 "extern",
@@ -18,6 +20,21 @@ impl<'a> Walker<FunctionDeclaration> for Context<'a> {
                 EntityType::Function(id),
             )?;
         } else {
+            self.set_local(function_declaration.name.content.clone(), id);
+
+            let mut param_id = 0;
+            for (pat, _ty) in &function_declaration.parameters {
+                match pat {
+                    Pattern::Slot(name) => match name {
+                        Name::Ident(token) => {
+                            self.set_local(token.content.clone(), param_id);
+                        }
+                        Name::Placeholder => {}
+                    },
+                }
+                param_id += 1;
+            }
+
             let mut body = Vec::new();
             std::mem::swap(&mut self.instructions, &mut body);
             if let Some(body) = function_declaration.body.clone() {
@@ -40,6 +57,20 @@ impl<'a> Walker<FunctionDeclaration> for Context<'a> {
                 }
             }
             body.push(Instruction::End);
+
+            dbg!(&body);
+
+            for (pat, _ty) in &function_declaration.parameters {
+                match pat {
+                    Pattern::Slot(name) => match name {
+                        Name::Ident(token) => {
+                            self.remove_local(&token.content);
+                        }
+                        Name::Placeholder => {}
+                    },
+                }
+            }
+
             self.implement_function(id, body);
         }
         if function_declaration.is_pub {

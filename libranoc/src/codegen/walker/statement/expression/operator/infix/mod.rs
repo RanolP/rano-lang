@@ -19,7 +19,7 @@ impl<'a> Walker<InfixOperator> for Context<'a> {
                 let rhs_type = "i32";
                 let function_id = self.import(
                     "extern",
-                    format!("{}__{}_{}", trait_name, lhs_type, rhs_type),
+                    &format!("{}__{}_{}", trait_name, lhs_type, rhs_type),
                     operator_span.clone(),
                 )?;
                 self.walk(lhs)?;
@@ -34,7 +34,7 @@ impl<'a> Walker<InfixOperator> for Context<'a> {
                 let rhs_type = "i32";
                 let partial_eq = self.import(
                     "extern",
-                    format!("PartialEq__{}_{}", lhs_type, rhs_type),
+                    &format!("PartialEq__{}_{}", lhs_type, rhs_type),
                     operator_span.clone(),
                 )?;
                 let result_type = "i32";
@@ -44,24 +44,48 @@ impl<'a> Walker<InfixOperator> for Context<'a> {
                 if to_negate {
                     let not = self.import(
                         "extern",
-                        format!("Not__{}", result_type),
+                        &format!("Not__{}", result_type),
                         operator_span.clone(),
                     )?;
                     self.instructions.push(Instruction::Call(not));
                 }
                 Ok(())
             }
-            InfixOperator::GreaterThan(lhs, operator_span, rhs) => {
-                todo!()
-            }
-            InfixOperator::LessThan(lhs, operator_span, rhs) => {
-                todo!()
-            }
-            InfixOperator::GreaterThanOrEqualTo(lhs, operator_span, rhs) => {
-                todo!()
-            }
-            InfixOperator::LessThanOrEqualTo(lhs, operator_span, rhs) => {
-                todo!()
+            InfixOperator::GreaterThan(lhs, operator_span, rhs)
+            | InfixOperator::LessThan(lhs, operator_span, rhs)
+            | InfixOperator::GreaterThanOrEqualTo(lhs, operator_span, rhs)
+            | InfixOperator::LessThanOrEqualTo(lhs, operator_span, rhs) => {
+                let to_negate = matches!(operator, InfixOperator::NotEqualTo(..));
+                let lhs_type = "i32";
+                let rhs_type = "i32";
+                let partial_eq = self.import(
+                    "extern",
+                    &format!("PartialOrd__{}_{}", lhs_type, rhs_type),
+                    operator_span.clone(),
+                )?;
+                self.walk(lhs)?;
+                self.walk(rhs)?;
+                self.instructions.push(Instruction::Call(partial_eq));
+                match operator {
+                    InfixOperator::GreaterThan(..) => {
+                        self.instructions.push(Instruction::I32Const(0));
+                        self.instructions.push(Instruction::I32GtS);
+                    }
+                    InfixOperator::LessThan(..) => {
+                        self.instructions.push(Instruction::I32Const(0));
+                        self.instructions.push(Instruction::I32LtS);
+                    }
+                    InfixOperator::GreaterThanOrEqualTo(..) => {
+                        self.instructions.push(Instruction::I32Const(0));
+                        self.instructions.push(Instruction::I32GeS);
+                    }
+                    InfixOperator::LessThanOrEqualTo(..) => {
+                        self.instructions.push(Instruction::I32Const(0));
+                        self.instructions.push(Instruction::I32LeS);
+                    }
+                    _ => {}
+                }
+                Ok(())
             }
             InfixOperator::GetField(_) => {
                 todo!()
