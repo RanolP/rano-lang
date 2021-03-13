@@ -1,6 +1,14 @@
 extern fn show(value: i32): i32;
 extern fn Add__i32_i32(lhs: i32, rhs: i32): i32;
 
+fn fib(x: i32): i32 {
+    if (x <= 1) {
+        1
+    } else {
+        fib(x - 1) + fib(x + 1)
+    }
+}
+
 pub fn main {
     show (40 + 123);
     7

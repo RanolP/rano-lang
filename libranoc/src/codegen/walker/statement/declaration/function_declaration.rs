@@ -1,6 +1,6 @@
 use wasm_encoder::{EntityType, Instruction};
 
-use crate::{codegen::*, core::ast::*, syntax::Span};
+use crate::{codegen::*, core::ast::*};
 
 impl<'a> Walker<FunctionDeclaration> for Context<'a> {
     fn walk(&mut self, function_declaration: FunctionDeclaration) -> Result<(), Error> {
@@ -20,10 +20,18 @@ impl<'a> Walker<FunctionDeclaration> for Context<'a> {
         } else {
             let mut body = Vec::new();
             std::mem::swap(&mut self.instructions, &mut body);
-            for statement in function_declaration.body {
+            for statement in function_declaration
+                .body
+                .clone()
+                .map(|block| block.body)
+                .unwrap_or_else(|| Vec::new())
+            {
                 self.walk(statement)?;
             }
-            if let Some(last_expression) = function_declaration.last_expression {
+            if let Some(last_expression) = function_declaration
+                .body
+                .and_then(|block| block.last_expression)
+            {
                 self.walk(last_expression)?;
                 self.instructions.push(Instruction::End);
             }

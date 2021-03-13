@@ -30,7 +30,20 @@ impl<'a> Walker<InfixOperator> for Context<'a> {
             InfixOperator::EqualTo(lhs, operator_span, rhs)
             | InfixOperator::NotEqualTo(lhs, operator_span, rhs) => {
                 let to_negate = matches!(operator, InfixOperator::NotEqualTo(..));
-                todo!()
+                let lhs_type = "i32";
+                let rhs_type = "i32";
+                let function_id = self.import(
+                    "extern",
+                    format!("PartialEq__{}_{}", lhs_type, rhs_type),
+                    operator_span.clone(),
+                )?;
+                self.walk(lhs)?;
+                self.walk(rhs)?;
+                self.instructions.push(Instruction::Call(function_id));
+                if to_negate {
+                    todo!()
+                }
+                Ok(())
             }
             InfixOperator::GreaterThan(lhs, operator_span, rhs) => {
                 todo!()

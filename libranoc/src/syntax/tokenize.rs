@@ -163,7 +163,7 @@ pub enum TokenKind {
     KeywordFn,
     #[token("for")]
     KeywordFor,
-    #[token("If")]
+    #[token("if")]
     KeywordIf,
     #[token("impl")]
     KeywordImpl,

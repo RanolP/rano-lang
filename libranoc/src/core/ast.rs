@@ -17,13 +17,13 @@ pub enum Node {
 #[derive(Debug, PartialEq)]
 pub struct Directive {}
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Statement {
     Declaration(Declaration),
     Expression(Expression),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Declaration {
     FunctionDeclaration(FunctionDeclaration),
     VariableDeclaration,
@@ -34,7 +34,7 @@ pub enum Declaration {
     ImplDeclaration,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct FunctionDeclaration {
     pub is_pub: bool,
     pub is_extern: bool,
@@ -43,8 +43,7 @@ pub struct FunctionDeclaration {
     pub parameters: Vec<(Pattern, Type)>,
     pub return_type: Type,
     // pub where_clauses: Vec<WhereClause>,
-    pub body: Vec<Statement>,
-    pub last_expression: Option<Expression>,
+    pub body: Option<Block>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -58,6 +57,7 @@ pub enum Expression {
     Init,
     Operator(Operator),
     Name(Name),
+    If(If),
 }
 
 impl Spanned for Expression {
@@ -283,7 +283,7 @@ impl fmt::Display for Type {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Pattern {
     Slot(Name),
 }
@@ -292,4 +292,26 @@ pub enum Pattern {
 pub enum Name {
     Ident(Token),
     Placeholder,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct If {
+    pub if_token: Token,
+    pub condition: Box<Expression>,
+    pub body: Box<Block>,
+    pub else_part: Option<Else>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum Else {
+    If(Token, Box<If>),
+    Block(Token, Box<Block>),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Block {
+    pub curly_bracket_open_token: Token,
+    pub body: Vec<Statement>,
+    pub last_expression: Option<Expression>,
+    pub curly_bracket_close_token: Token,
 }

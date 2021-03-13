@@ -1,6 +1,7 @@
 use crate::{core::ast::*, syntax::parse::*};
 
 mod group_tuple;
+mod r#if;
 mod literal;
 mod name;
 mod operator;
@@ -9,9 +10,14 @@ pub use group_tuple::*;
 pub use literal::*;
 pub use name::*;
 pub use operator::*;
+pub use r#if::*;
 
 pub fn parse_simple_expression(i: ParseInput) -> ParseResult<Expression> {
-    alt((parse_literal_expression, parse_name_expression))(i)
+    alt((
+        parse_literal_expression,
+        parse_name_expression,
+        parse_if_expression,
+    ))(i)
 }
 pub fn parse_expression(i: ParseInput) -> ParseResult<Expression> {
     let (i, lhs) = alt((

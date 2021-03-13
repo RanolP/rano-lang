@@ -30,13 +30,9 @@ pub fn parse_function_declaration(i: ParseInput) -> ParseResult<FunctionDeclarat
     let (i, return_type) = opt(preceded(tag(TokenKind::PunctuationColon), parse_type))(i)?;
     let return_type = return_type.unwrap_or_else(|| Type::Tuple(Vec::new()));
 
-    let (i, (body, last_expression)) = cut(alt((
-        map(tag(TokenKind::PunctuationSemicolon), |_| (Vec::new(), None)),
-        delimited(
-            tag(TokenKind::PunctuationLeftCurlyBracket),
-            tuple((many0(parse_statement), opt(parse_expression))),
-            tag(TokenKind::PunctuationRightCurlyBracket),
-        ),
+    let (i, body) = cut(alt((
+        map(tag(TokenKind::PunctuationSemicolon), |_| None),
+        map(parse_block, Some),
     )))(i)?;
 
     Ok((
@@ -48,7 +44,6 @@ pub fn parse_function_declaration(i: ParseInput) -> ParseResult<FunctionDeclarat
             parameters: parameters.unwrap_or_else(|| Vec::new()),
             return_type,
             body,
-            last_expression,
         },
     ))
 }

@@ -27,6 +27,7 @@ impl<'a> Walker<Expression> for Context<'a> {
             }
             Expression::Operator(operator) => self.walk(operator),
             Expression::Name(name) => self.walk(name),
+            Expression::If(r#if) => todo!("if is not implemented now"),
         }
     }
 }

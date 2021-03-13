@@ -9,10 +9,6 @@ mod external {
         println!("{}", i);
         0
     }
-    pub fn add(lhs: i32, rhs: i32) -> i32 {
-        dbg!(&lhs, &rhs);
-        lhs + rhs
-    }
 }
 
 mod ops {
@@ -92,7 +88,6 @@ fn main() -> anyhow::Result<()> {
     let import_object = imports! {
         "extern" => {
             "show" => Function::new_native(&store, external::show),
-            "add" => Function::new_native(&store, external::add),
             "Add__i32_i32" => Function::new_native(&store, ops::add_i32_i32),
         },
     };
